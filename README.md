@@ -1,85 +1,113 @@
 <p align="center">
-  <img src="https://img.shields.io/npm/v/claude-skills-devops.svg?style=for-the-badge&color=CB3837&logo=npm&logoColor=white" alt="npm version" />
-  <img src="https://img.shields.io/npm/dm/claude-skills-devops.svg?style=for-the-badge&color=blue&logo=npm&logoColor=white" alt="downloads" />
-  <img src="https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge" alt="license" />
-  <img src="https://img.shields.io/badge/Claude_Code-Skills-blueviolet?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPjxwYXRoIGQ9Ik0xMiAyQzYuNDggMiAyIDYuNDggMiAxMnM0LjQ4IDEwIDEwIDEwIDEwLTQuNDggMTAtMTBTMTcuNTIgMiAxMiAyem0tMiAxNWwtNS01IDEuNDEtMS40MUwxMCAxNC4xN2w3LjU5LTcuNTlMMTkgOGwtOSA5eiIvPjwvc3ZnPg==&logoColor=white" alt="Claude Code" />
+  <br/>
+  <img width="160" src="https://cdn.simpleicons.org/docker/2496ED" alt="DevOps" />
+  <br/>
 </p>
 
 <h1 align="center">claude-skills-devops</h1>
 
 <p align="center">
-  <strong>11 interactive DevOps skills for Claude Code</strong><br/>
+  <strong>11 interactive DevOps skills for <a href="https://claude.ai/code">Claude Code</a></strong><br/>
   Not just docs — actual workflows that analyze, ask, execute, and verify.
+</p>
+
+<p align="center">
+  <a href="https://www.npmjs.com/package/claude-skills-devops"><img src="https://img.shields.io/npm/v/claude-skills-devops.svg?style=flat-square&color=CB3837&logo=npm&logoColor=white" alt="npm" /></a>
+  <a href="https://www.npmjs.com/package/claude-skills-devops"><img src="https://img.shields.io/npm/dm/claude-skills-devops.svg?style=flat-square&color=blue&logo=npm&logoColor=white" alt="downloads" /></a>
+  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-green.svg?style=flat-square" alt="license" /></a>
+  <a href="https://github.com/sakiphan/claude-skills-devops"><img src="https://img.shields.io/github/stars/sakiphan/claude-skills-devops?style=flat-square&logo=github" alt="stars" /></a>
+</p>
+
+<p align="center">
+  <code>npm install -g claude-skills-devops</code>
 </p>
 
 ---
 
-## What is this?
+## Why?
 
-Claude Code skills are intelligent prompts that turn Claude into a **specialized DevOps engineer**. Instead of generic answers, each skill follows a structured workflow:
+Most DevOps tasks follow the same pattern: scan the project, make decisions, generate configs, validate. But you repeat this from scratch every time.
 
-```
- Scan Project ──> Ask Questions ──> Generate Files ──> Validate Output
-```
+These skills encode **senior DevOps knowledge** into reusable workflows. Type a slash command, answer a few questions, get production-ready output.
 
 ```
 You: /devops-docker-gen both
+
 Claude: Analyzing project... Node.js + Express detected.
         PostgreSQL and Redis found in dependencies.
         Generating multi-stage Dockerfile, docker-compose.yml, .dockerignore...
-        [creates 3 production-ready files]
+
+        Generated Files
+        ──────────────────────────────────
+        Dockerfile          (multi-stage, 3 stages, ~150MB final)
+        docker-compose.yml  (app + postgres + redis)
+        .dockerignore       (24 rules)
+        ──────────────────────────────────
+        Next: docker compose up -d
 ```
 
-## Quick Start
+## How It Works
 
-```bash
-npm install -g claude-skills-devops
+```
+                    You type: /devops-deploy prod aws
+                                    |
+                    +---------------+---------------+
+                    |                               |
+              1. Read SKILL.md              2. Scan your project
+              (deployment workflow)          (detect Node.js, Next.js)
+                    |                               |
+                    +---------------+---------------+
+                                    |
+                          3. Read references/aws.md
+                          (AWS-specific commands)
+                                    |
+                          4. Execute workflow
+                          (checks -> deploy -> verify)
 ```
 
-That's it. Skills auto-install to `~/.claude/skills/`. Open Claude Code and start using them.
+Each skill lives in `~/.claude/skills/` with a `SKILL.md` and optional `references/` directory.
 
 ---
 
-## 11 Skills at a Glance
+## 11 Skills
 
 ### Deploy & Ship
 
-| Skill | What it does | Example |
-|:------|:------------|:--------|
-| `/devops-deploy` | Interactive deployment with pre-checks & rollback | `/devops-deploy prod aws` |
-| `/devops-docker-gen` | Dockerfile + docker-compose + multi-platform build | `/devops-docker-gen both` |
-| `/devops-ci-pipeline` | CI/CD pipelines with caching & security | `/devops-ci-pipeline github-actions` |
+| | Skill | What it does |
+|:--|:------|:------------|
+| :rocket: | **`/devops-deploy`** | Deploy to Vercel, AWS, GCP, Fly.io, Railway with pre-checks & rollback |
+| :whale: | **`/devops-docker-gen`** | Generate Dockerfile + docker-compose for 9 languages. Multi-platform builds |
+| :arrows_counterclockwise: | **`/devops-ci-pipeline`** | CI/CD for GitHub Actions, GitLab CI, CircleCI, Bitbucket. With DB migration gates |
 
 ### Secure & Audit
 
-| Skill | What it does | Example |
-|:------|:------------|:--------|
-| `/devops-infra-audit` | 50+ security checks with fix examples | `/devops-infra-audit all` |
-| `/devops-env-sync` | Manage, compare, analyze .env files | `/devops-env-sync analyze` |
-| `/devops-secrets` | Secret management — Vault, SOPS, AWS SM | `/devops-secrets setup` |
+| | Skill | What it does |
+|:--|:------|:------------|
+| :shield: | **`/devops-infra-audit`** | 50+ security checks with before/after fix examples. Supply chain scanning |
+| :closed_lock_with_key: | **`/devops-secrets`** | Secret management with SOPS, Vault, AWS SM. Audit, rotate, migrate |
+| :gear: | **`/devops-env-sync`** | Compare, validate, analyze .env files across environments and 9 languages |
 
 ### Provision & Orchestrate
 
-| Skill | What it does | Example |
-|:------|:------------|:--------|
-| `/devops-k8s` | K8s manifests, debug pods, Helm, GitOps | `/devops-k8s gitops` |
-| `/devops-terraform` | Terraform with module patterns for AWS/GCP | `/devops-terraform aws` |
-| `/devops-monitor` | Prometheus, OTel, Datadog + SLO alerting | `/devops-monitor` |
+| | Skill | What it does |
+|:--|:------|:------------|
+| :ship: | **`/devops-k8s`** | Generate manifests, debug pods, Helm charts, GitOps with ArgoCD |
+| :cloud: | **`/devops-terraform`** | Infrastructure as Code for AWS/GCP with reusable module patterns |
+| :bar_chart: | **`/devops-monitor`** | Prometheus, OTel, Datadog setup. SLO alerting + RED method dashboards |
 
 ### Analyze & Migrate
 
-| Skill | What it does | Example |
-|:------|:------------|:--------|
-| `/devops-log-analyzer` | Error patterns, trace correlation | `/devops-log-analyzer` |
-| `/devops-db-migrate` | Safe migrations for 10 tools | `/devops-db-migrate status` |
+| | Skill | What it does |
+|:--|:------|:------------|
+| :mag: | **`/devops-log-analyzer`** | Error patterns, timeline reconstruction, distributed trace correlation |
+| :floppy_disk: | **`/devops-db-migrate`** | Safe migrations for Prisma, Alembic, TypeORM + 7 more. Zero-downtime strategies |
 
 ---
 
-## Skill Details
+<details>
+<summary><h2>Skill Details (click to expand)</h2></summary>
 
 ### `/devops-deploy`
-
-> Interactive deployment workflow with safety checks and **per-provider rollback procedures**.
 
 ```
 /devops-deploy staging vercel    # deploy to staging on Vercel
@@ -87,43 +115,33 @@ That's it. Skills auto-install to `~/.claude/skills/`. Open Claude Code and star
 /devops-deploy                   # interactive mode
 ```
 
-**What happens:**
 - Detects project type (Node.js, Python, Go, Rust, Java, C#/.NET, Ruby, PHP, Elixir)
-- Runs pre-deploy checks: tests, lint, build, git status, secret scan
-- Deploys with provider-specific commands
-- Post-deploy health check + instant rollback if needed
+- Pre-deploy checks: tests, lint, build, git status, secret scan
+- Per-provider rollback procedures with verification steps
+- Post-deploy health check
 
 **Providers:** Vercel, AWS (ECS/Lambda/S3), GCP (Cloud Run/App Engine), Fly.io, Railway
-
-**New in v1.2:** Detailed rollback procedures per provider with verification steps and estimated rollback times.
 
 ---
 
 ### `/devops-docker-gen`
 
-> Generates optimized, production-ready Docker configurations with **multi-platform support**.
-
 ```
 /devops-docker-gen dockerfile    # only Dockerfile
 /devops-docker-gen compose       # only docker-compose.yml
-/devops-docker-gen both          # Dockerfile + compose + .dockerignore
+/devops-docker-gen both          # everything
 ```
 
-**What it generates:**
-- Multi-stage Dockerfile (deps -> build -> runtime, ~150MB instead of ~1GB)
-- docker-compose.yml with health checks, resource limits, logging, init
-- .dockerignore with language-specific rules
-- Non-root user, HEALTHCHECK, pinned versions, cache-optimized layers
+- Multi-stage Dockerfile (~150MB vs ~1GB)
+- docker-compose with health checks, resource limits, logging, init
+- Multi-platform builds (ARM64 + AMD64)
+- Kafka, MinIO, worker compose patterns
 
-**New in v1.2:** Multi-platform builds (ARM64 + AMD64), Kafka/MinIO/worker compose patterns, logging config.
-
-**Languages:** Node.js, Python, Go, Rust, Java/Spring, C#/.NET, PHP, Elixir, Ruby
+**Languages:** Node.js, Python, Go, Rust, Java, C#/.NET, PHP, Elixir, Ruby
 
 ---
 
 ### `/devops-ci-pipeline`
-
-> Creates CI/CD pipelines with all the best practices you'd forget.
 
 ```
 /devops-ci-pipeline github-actions
@@ -131,181 +149,137 @@ That's it. Skills auto-install to `~/.claude/skills/`. Open Claude Code and star
 /devops-ci-pipeline bitbucket-pipelines
 ```
 
-**What's included:**
 - Dependency caching, matrix builds, parallel jobs
-- Security scanning (dependency audit, SAST)
-- Conditional deploy (preview on PR, production on main)
+- Security scanning, conditional deploy
 - Monorepo support (Turborepo, Nx, pnpm workspaces)
-- Safe database migrations in CI with dry-run gates
-
-**Providers:** GitHub Actions, GitLab CI, CircleCI, Bitbucket Pipelines
-
-**New in v1.2:** Database migration safety gates in CI (Prisma, Alembic, Django, Flyway).
+- Database migration safety gates in CI
 
 ---
 
 ### `/devops-infra-audit`
 
-> Read-only security audit with severity-rated findings and **before/after fix examples**.
-
 ```
 /devops-infra-audit all          # scan everything
-/devops-infra-audit docker       # only Docker files
-/devops-infra-audit ci           # only CI/CD pipelines
+/devops-infra-audit docker       # only Docker
 /devops-infra-audit k8s          # only Kubernetes
 ```
 
-**50+ checks across 7 categories:**
+50+ checks across: Docker, Compose, CI/CD, K8s, Env, Terraform, Supply Chain
 
-| Category | Example Checks |
-|:---------|:---------------|
-| Docker | root user, latest tag, no healthcheck, secrets in layers |
-| Compose | privileged mode, docker.sock mount, no resource limits |
-| CI/CD | unpinned actions, secret exposure, fork PR risks |
-| K8s | no security context, no probes, no network policies |
-| Env | committed .env files, hardcoded credentials |
-| Terraform | state in git, overly permissive IAM |
-| Supply Chain | no image scanning, no SBOM, unsigned images |
-
-**Output:** Scored report (A-F) with fix suggestions, effort estimates, and before/after code examples.
-
-**New in v1.2:** Supply chain security checks (Trivy, SBOM, Cosign) + remediation examples for every check.
+Output: Scored report (A-F) with before/after fix code examples
 
 ---
 
 ### `/devops-secrets`
 
-> Production-grade secret management — setup, audit, rotate, migrate.
-
 ```
-/devops-secrets setup            # set up secret management from scratch
+/devops-secrets setup            # set up from scratch
 /devops-secrets audit            # scan for secret hygiene issues
-/devops-secrets rotate           # plan & execute secret rotation
+/devops-secrets rotate           # plan & execute rotation
 /devops-secrets migrate          # migrate between providers
 ```
 
-**Supports:** SOPS + age, AWS Secrets Manager, HashiCorp Vault, External Secrets Operator, Sealed Secrets, Doppler, Infisical
-
-**Features:**
-- Scans codebase for hardcoded secrets (AWS keys, API tokens, private keys)
-- Git history scan for previously committed secrets
-- Zero-downtime rotation plans for DB passwords, API keys, TLS certs
-- SDK integration examples (Node.js, Python, Go, C#)
-- CI/CD secret injection (GitHub Actions, GitLab CI, Docker Compose)
+Supports: SOPS + age, AWS Secrets Manager, HashiCorp Vault, External Secrets Operator, Sealed Secrets, Doppler
 
 ---
 
 ### `/devops-k8s`
 
-> Four modes: generate, debug, helm, or **GitOps with ArgoCD**.
-
 ```
-/devops-k8s generate deployment  # create K8s manifests
+/devops-k8s generate deployment  # create manifests
 /devops-k8s debug                # diagnose failing pods
-/devops-k8s helm my-app          # scaffold Helm chart
-/devops-k8s gitops               # ArgoCD + Kustomize setup
+/devops-k8s helm my-app          # Helm chart scaffold
+/devops-k8s gitops               # ArgoCD + Kustomize
 ```
 
-**Generate:** Deployment, Service, Ingress, ConfigMap, HPA, PDB, **NetworkPolicy** — all with security contexts, probes, resource limits.
-
-**Debug:** Diagnoses CrashLoopBackOff, ImagePullBackOff, Pending, OOMKilled with kubectl commands and fixes.
-
-**Helm:** Full chart scaffold with values per environment, helpers, NOTES.txt.
-
-**GitOps:** ArgoCD Application + Kustomize overlays (dev/staging/prod).
-
-**New in v1.2:** NetworkPolicy generation, PodDisruptionBudget, framework-specific readiness probes.
+Generates: Deployment, Service, Ingress, ConfigMap, HPA, PDB, NetworkPolicy
 
 ---
 
 ### `/devops-env-sync`
 
-> Never lose track of environment variables again. Now with **dependency mapping**.
-
 ```
 /devops-env-sync compare         # matrix of all .env files
-/devops-env-sync generate        # create .env.example
-/devops-env-sync validate        # check missing/empty vars
 /devops-env-sync analyze         # find where each var is used
-/devops-env-sync diff .env.staging .env.production
+/devops-env-sync validate        # check missing/empty vars
 ```
 
-**Features:** Comparison matrix, smart placeholder generation, secret masking, framework-aware warnings (Next.js `NEXT_PUBLIC_*`, Vite `VITE_*`).
-
-**New in v1.2:** `analyze` mode scans codebase across 9 languages to map which env vars are used where, find unused vars, and detect missing definitions.
+Scans 9 languages for env var usage. Framework-aware (Next.js, Vite, Django, Rails).
 
 ---
 
 ### `/devops-monitor`
 
-> Set up monitoring from scratch with **SLO-based alerting**.
-
 ```
-/devops-monitor                  # interactive — detects your stack
-/devops-monitor prometheus       # Prometheus + Grafana setup
-/devops-monitor datadog          # Datadog APM + metrics
+/devops-monitor prometheus       # Prometheus + Grafana
+/devops-monitor datadog          # Datadog APM
+/devops-monitor                  # interactive
 ```
 
-**What it sets up:**
-- Prometheus + Grafana (scrape configs, dashboards, alert rules)
-- OpenTelemetry (collector, auto-instrumentation, OTLP exporters)
-- Datadog (agent, APM, custom metrics, log collection)
-- SLO/SLI framework with burn rate alerting
-- RED method dashboards (Rate, Errors, Duration)
-
-**New in v1.2:** SLO/SLI framework, burn rate alerting, error budget dashboards, RED method quick reference.
+SLO/SLI framework, burn rate alerting, RED method dashboards, OTel auto-instrumentation.
 
 ---
 
 ### `/devops-terraform`
 
-> Generate cloud infrastructure as code with **reusable module patterns**.
-
 ```
 /devops-terraform aws            # AWS resources
 /devops-terraform gcp            # GCP resources
-/devops-terraform                # interactive mode
 ```
 
-**Generates:** `main.tf`, `variables.tf`, `outputs.tf`, `backend.tf`, `terraform.tfvars.example`
-
-**Patterns:** VPC with subnets, ECS/Cloud Run, RDS/Cloud SQL, S3/GCS, remote state with locking.
-
-**New in v1.2:** Reusable module directory structure, version pinning, workspaces vs separate directories guide.
+Generates: `main.tf`, `variables.tf`, `outputs.tf`, `backend.tf` with reusable module patterns.
 
 ---
 
 ### `/devops-log-analyzer`
 
-> Find what went wrong, fast. Now with **distributed trace correlation**.
-
 ```
-/devops-log-analyzer             # interactive — finds log sources
+/devops-log-analyzer             # interactive
 /devops-log-analyzer errors      # focus on errors
 ```
 
-**Sources:** Application logs, Docker, Kubernetes, CloudWatch, CI/CD logs.
-
-**Analysis:** Error frequency, timeline reconstruction, pattern detection, cross-service trace correlation.
-
-**New in v1.2:** Distributed trace ID correlation across microservices with visual request flow reconstruction.
+Error frequency, timeline reconstruction, distributed trace correlation across microservices.
 
 ---
 
 ### `/devops-db-migrate`
 
-> Safe database migrations with guardrails.
-
 ```
-/devops-db-migrate               # interactive — detects your tool
-/devops-db-migrate status        # check pending migrations
+/devops-db-migrate               # detects your tool
+/devops-db-migrate status        # check pending
 ```
 
-**Supports:** Prisma, Alembic, Knex, TypeORM, Drizzle, Django, Flyway, Entity Framework Core, Laravel, Ecto.
+Supports: Prisma, Alembic, Knex, TypeORM, Drizzle, Django, Flyway, EF Core, Laravel, Ecto
 
-**Safety:** Warns on destructive ops (DROP TABLE), suggests backups before prod, zero-downtime strategies (expand-contract pattern).
+</details>
 
 ---
+
+## Language Support
+
+| Language | Docker | CI | Deploy | Monitor | Migrations |
+|:---------|:------:|:--:|:------:|:-------:|:----------:|
+| **Node.js** | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+| **Python** | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+| **Go** | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+| **Rust** | :white_check_mark: | :white_check_mark: | :white_check_mark: | - | - |
+| **Java** | :white_check_mark: | :white_check_mark: | :white_check_mark: | - | :white_check_mark: |
+| **C#/.NET** | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+| **PHP** | :white_check_mark: | :white_check_mark: | :white_check_mark: | - | :white_check_mark: |
+| **Elixir** | :white_check_mark: | :white_check_mark: | :white_check_mark: | - | :white_check_mark: |
+| **Ruby** | :white_check_mark: | :white_check_mark: | :white_check_mark: | - | - |
+
+## By the Numbers
+
+| | |
+|:--|:--|
+| **11** | Interactive skills |
+| **52** | Files in package |
+| **50+** | Security checks (infra-audit) |
+| **9** | Languages supported |
+| **6** | Cloud providers |
+| **10** | Migration tools |
+| **7** | Secret managers |
 
 ## CLI
 
@@ -316,63 +290,35 @@ claude-skills-devops install     # reinstall after update
 claude-skills-devops uninstall   # clean removal
 ```
 
-## How It Works
+## Changelog
 
-```
-~/.claude/skills/
-  devops-deploy/
-    SKILL.md              <- Main skill (Claude reads this)
-    references/
-      vercel.md           <- Provider-specific commands
-      aws.md              <- (Claude reads on-demand)
-      ...
-```
+### v1.3.0
+- New `/devops-secrets` skill (SOPS, Vault, AWS SM, External Secrets Operator)
 
-Each skill is a structured workflow in `SKILL.md` with supporting reference files. When you type `/devops-deploy prod vercel`, Claude:
+### v1.2.0
+- Audit: before/after remediation examples + supply chain security
+- Deploy: per-provider rollback procedures
+- Docker: multi-platform builds, Kafka/MinIO/worker patterns
+- K8s: NetworkPolicy + PDB + readiness probes
+- Monitor: SLO/SLI framework + burn rate alerting
+- CI: database migration safety gates
+- Terraform: reusable module patterns
+- Log Analyzer: distributed trace correlation
+- Env Sync: `analyze` mode (9 languages)
 
-1. **Reads** `SKILL.md` — gets the full deployment workflow
-2. **Scans** your project — finds `package.json`, detects Next.js
-3. **Reads** `references/vercel.md` — gets Vercel-specific commands
-4. **Executes** — runs checks, deploys, verifies health
+### v1.1.0
+- OpenTelemetry + Datadog monitoring
+- PHP + Elixir language support
+- ArgoCD + Kustomize + Bitbucket Pipelines
 
-Reference files keep each skill focused while supporting 5+ providers/tools per skill.
-
-## Language Support
-
-| Language | docker-gen | ci-pipeline | deploy | monitor | db-migrate |
-|:---------|:----------|:------------|:-------|:--------|:-----------|
-| **Node.js** | Multi-stage | npm cache | All providers | prom-client, OTel, Datadog | Prisma, Knex, TypeORM, Drizzle |
-| **Python** | venv + slim | pip cache | All providers | prometheus_client, OTel, Datadog | Alembic, Django |
-| **Go** | distroless | go mod cache | All providers | client_golang, OTel, Datadog | Flyway |
-| **Rust** | cargo-chef | cargo cache | All providers | - | - |
-| **Java** | gradle/maven | gradle/maven cache | All providers | - | Flyway |
-| **C#/.NET** | sdk + aspnet | dotnet cache | All providers | prometheus-net, OTel, Datadog | Entity Framework Core |
-| **PHP** | fpm-alpine | composer cache | All providers | - | Laravel Migrations |
-| **Elixir** | release build | mix cache | All providers | - | Ecto |
-| **Ruby** | slim + bundler | bundle cache | All providers | - | - |
-
-## What's New in v1.2
-
-- **Audit:** Before/after remediation examples for every check + supply chain security (Trivy, SBOM, Cosign)
-- **Deploy:** Per-provider rollback procedures with verification steps
-- **Docker:** Multi-platform builds (ARM64/AMD64), Kafka/MinIO/worker patterns, logging config
-- **K8s:** NetworkPolicy + PDB generation, framework-specific readiness probes
-- **Monitor:** SLO/SLI framework, burn rate alerting, RED method dashboards
-- **CI:** Database migration safety gates in CI pipelines
-- **Terraform:** Reusable module patterns, workspace vs directory guide
-- **Log Analyzer:** Distributed trace correlation across microservices
-- **Env Sync:** `analyze` mode — scan codebase to map env var usage across 9 languages
-- **AWS Ref:** IAM roles, Lambda layers, CloudWatch alarms, Secrets Manager
-- **Encryption:** Tool comparison matrix (git-crypt vs SOPS vs 1Password vs Doppler)
-- **NEW: Secrets:** Full secret management skill — SOPS, Vault, AWS SM, External Secrets, rotation, audit
+### v1.0.0
+- Initial release with 10 skills
 
 ## Uninstall
 
 ```bash
 npm uninstall -g claude-skills-devops
 ```
-
-Cleanly removes all skills. Restores any pre-existing skills that were backed up.
 
 ## Requirements
 
