@@ -19,6 +19,11 @@
 </p>
 
 <p align="center">
+  <a href="https://www.npmjs.com/package/claude-skills-devops"><strong>View on npm</strong></a> &nbsp;&middot;&nbsp;
+  <a href="https://github.com/sakiphan/claude-skills-devops"><strong>View on GitHub</strong></a>
+</p>
+
+<p align="center">
   <code>npm install -g claude-skills-devops</code>
 </p>
 
