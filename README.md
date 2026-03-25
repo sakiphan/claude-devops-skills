@@ -8,7 +8,7 @@
 <h1 align="center">claude-skills-devops</h1>
 
 <p align="center">
-  <strong>10 interactive DevOps skills for Claude Code</strong><br/>
+  <strong>11 interactive DevOps skills for Claude Code</strong><br/>
   Not just docs — actual workflows that analyze, ask, execute, and verify.
 </p>
 
@@ -40,7 +40,7 @@ That's it. Skills auto-install to `~/.claude/skills/`. Open Claude Code and star
 
 ---
 
-## 10 Skills at a Glance
+## 11 Skills at a Glance
 
 ### Deploy & Ship
 
@@ -56,6 +56,7 @@ That's it. Skills auto-install to `~/.claude/skills/`. Open Claude Code and star
 |:------|:------------|:--------|
 | `/devops-infra-audit` | 50+ security checks with fix examples | `/devops-infra-audit all` |
 | `/devops-env-sync` | Manage, compare, analyze .env files | `/devops-env-sync analyze` |
+| `/devops-secrets` | Secret management — Vault, SOPS, AWS SM | `/devops-secrets setup` |
 
 ### Provision & Orchestrate
 
@@ -169,6 +170,28 @@ That's it. Skills auto-install to `~/.claude/skills/`. Open Claude Code and star
 **Output:** Scored report (A-F) with fix suggestions, effort estimates, and before/after code examples.
 
 **New in v1.2:** Supply chain security checks (Trivy, SBOM, Cosign) + remediation examples for every check.
+
+---
+
+### `/devops-secrets`
+
+> Production-grade secret management — setup, audit, rotate, migrate.
+
+```
+/devops-secrets setup            # set up secret management from scratch
+/devops-secrets audit            # scan for secret hygiene issues
+/devops-secrets rotate           # plan & execute secret rotation
+/devops-secrets migrate          # migrate between providers
+```
+
+**Supports:** SOPS + age, AWS Secrets Manager, HashiCorp Vault, External Secrets Operator, Sealed Secrets, Doppler, Infisical
+
+**Features:**
+- Scans codebase for hardcoded secrets (AWS keys, API tokens, private keys)
+- Git history scan for previously committed secrets
+- Zero-downtime rotation plans for DB passwords, API keys, TLS certs
+- SDK integration examples (Node.js, Python, Go, C#)
+- CI/CD secret injection (GitHub Actions, GitLab CI, Docker Compose)
 
 ---
 
@@ -341,6 +364,7 @@ Reference files keep each skill focused while supporting 5+ providers/tools per 
 - **Env Sync:** `analyze` mode — scan codebase to map env var usage across 9 languages
 - **AWS Ref:** IAM roles, Lambda layers, CloudWatch alarms, Secrets Manager
 - **Encryption:** Tool comparison matrix (git-crypt vs SOPS vs 1Password vs Doppler)
+- **NEW: Secrets:** Full secret management skill — SOPS, Vault, AWS SM, External Secrets, rotation, audit
 
 ## Uninstall
 
