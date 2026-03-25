@@ -14,6 +14,7 @@ Parse `$ARGUMENTS` to determine mode:
 - `generate` (or `gen`) -> Generate manifests
 - `debug` (or `diag`, `troubleshoot`) -> Debug failing resources
 - `helm` -> Scaffold Helm chart
+- `gitops` (or `argocd`, `argo`) -> Set up GitOps with ArgoCD
 - If empty or unclear, ask the user which mode they need
 
 ---
@@ -196,6 +197,69 @@ Reference: [helm-scaffold.md](references/helm-scaffold.md)
 1. Run `helm lint charts/<name>`
 2. Run `helm template charts/<name>` to see rendered output
 3. Show the user how to install: `helm install <release> charts/<name> -f values-dev.yaml`
+
+---
+
+## Mode: GitOps (ArgoCD + Kustomize)
+
+### Phase 1: Understand Requirements
+
+Ask the user:
+1. **New ArgoCD setup or add app to existing?**
+2. **Kustomize or Helm for templating?**
+3. **Which environments?** (dev, staging, prod)
+
+### Phase 2: Generate Kustomize Structure
+
+Generate this directory layout:
+```
+k8s/
+├── base/
+│   ├── kustomization.yaml
+│   ├── deployment.yaml
+│   ├── service.yaml
+│   └── ingress.yaml
+└── overlays/
+    ├── dev/
+    │   └── kustomization.yaml
+    ├── staging/
+    │   └── kustomization.yaml
+    └── prod/
+        └── kustomization.yaml
+```
+
+**Base kustomization.yaml**: Include all shared resources (deployment, service, ingress) with common labels and namespace.
+
+**Overlay kustomization.yaml (per env)**: Reference the base, then apply environment-specific patches:
+- Replicas (dev=1, staging=2, prod=3+)
+- Resource requests/limits
+- Environment variables
+- Image tags
+- Namespace
+
+Use the Resource Sizing Guide (above) for per-environment defaults.
+
+### Phase 3: Generate ArgoCD Application Manifest
+
+Generate an ArgoCD `Application` CR for each environment:
+- `metadata.name`: `<app>-<env>`
+- `spec.source.repoURL`: point to the Git repository
+- `spec.source.path`: `k8s/overlays/<env>`
+- `spec.destination.server`: cluster API server
+- `spec.destination.namespace`: target namespace
+- **Sync policy**:
+  - dev/staging: automated sync with self-heal and prune enabled
+  - prod: manual sync (require human approval)
+- **Health checks**: ensure deployment rollout completes
+
+Reference: [argocd-kustomize.md](references/argocd-kustomize.md)
+
+### Phase 4: Validate
+
+1. Run `kustomize build k8s/overlays/<env>` for each environment
+2. Verify rendered output has correct image tags, replicas, and resources
+3. If ArgoCD CLI available: `argocd app create --dry-run`
+4. Show the user how to apply: `kubectl apply -f argocd-app.yaml`
 
 ## Common Errors & Troubleshooting
 

@@ -53,7 +53,7 @@ That's it. Skills auto-install to `~/.claude/skills/`. Open Claude Code and star
 |-------|-------------|---------|
 | [`/devops-k8s`](#devops-k8s) | K8s manifests, debug pods, Helm charts | `/devops-k8s debug` |
 | [`/devops-terraform`](#devops-terraform) | Generate Terraform for AWS/GCP | `/devops-terraform aws` |
-| [`/devops-monitor`](#devops-monitor) | Set up Prometheus + Grafana | `/devops-monitor` |
+| [`/devops-monitor`](#devops-monitor) | Prometheus, OpenTelemetry, Datadog | `/devops-monitor` |
 
 ### Analyze & Migrate
 
@@ -187,13 +187,14 @@ Set up monitoring from scratch.
 ```
 /devops-monitor                  # interactive — detects your stack
 /devops-monitor prometheus       # Prometheus + Grafana setup
+/devops-monitor datadog          # Datadog APM + metrics
 ```
 
 **What it sets up:**
-- Prometheus config with scrape targets and alert rules
-- Grafana dashboards (request rate, error rate, latency, CPU, memory)
+- Prometheus + Grafana (scrape configs, dashboards, alert rules)
+- OpenTelemetry (collector, auto-instrumentation, OTLP exporters)
+- Datadog (agent, APM, custom metrics, log collection)
 - Application instrumentation (Node.js, Python, Go, C#/.NET)
-- Docker Compose services for the monitoring stack
 
 ---
 
@@ -277,12 +278,14 @@ Reference files keep each skill focused while supporting 5+ providers/tools per 
 
 | Language | docker-gen | ci-pipeline | deploy | monitor | db-migrate |
 |----------|-----------|-------------|--------|---------|------------|
-| Node.js | Multi-stage | npm cache | All providers | prom-client | Prisma, Knex, TypeORM, Drizzle |
-| Python | venv + slim | pip cache | All providers | prometheus_client | Alembic, Django |
-| Go | distroless | go mod cache | All providers | client_golang | Flyway |
+| Node.js | Multi-stage | npm cache | All providers | prom-client, OTel, Datadog | Prisma, Knex, TypeORM, Drizzle |
+| Python | venv + slim | pip cache | All providers | prometheus_client, OTel, Datadog | Alembic, Django |
+| Go | distroless | go mod cache | All providers | client_golang, OTel, Datadog | Flyway |
 | Rust | cargo-chef | cargo cache | All providers | - | - |
 | Java | gradle/maven | gradle/maven cache | All providers | - | Flyway |
-| C#/.NET | sdk + aspnet | dotnet cache | All providers | prometheus-net | Entity Framework Core |
+| C#/.NET | sdk + aspnet | dotnet cache | All providers | prometheus-net, OTel, Datadog | Entity Framework Core |
+| PHP | fpm-alpine | composer cache | All providers | - | Laravel Migrations |
+| Elixir | release build | mix cache | All providers | - | Ecto |
 | Ruby | - | - | All providers | - | - |
 
 ## Uninstall

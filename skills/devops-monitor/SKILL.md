@@ -1,7 +1,7 @@
 ---
 name: devops-monitor
-description: "Monitoring and observability setup. Use when the user says 'set up monitoring', 'add prometheus', 'grafana dashboard', 'alerting rules', 'observability', 'metrics', 'add logging', or discusses application monitoring, metric collection, or alerting configuration."
-argument-hint: "[prometheus-grafana|datadog|newrelic|elk|cloud-native]"
+description: "Monitoring and observability setup. Use when the user says 'set up monitoring', 'add prometheus', 'grafana dashboard', 'alerting rules', 'observability', 'metrics', 'add logging', 'opentelemetry', 'otel', 'datadog', or discusses application monitoring, metric collection, or alerting configuration."
+argument-hint: "[prometheus-grafana|opentelemetry|datadog|newrelic|elk|cloud-native]"
 ---
 
 # Monitoring & Observability Setup
@@ -43,7 +43,8 @@ Parse `$ARGUMENTS` for monitoring stack. If not specified, ask:
 
 1. **Which monitoring stack?**
    - Prometheus + Grafana (recommended for self-hosted, open-source)
-   - Datadog (managed, full-stack observability)
+   - OpenTelemetry + backend (vendor-neutral instrumentation with flexible backends -- Jaeger, Grafana Tempo, Prometheus)
+   - Datadog (managed, full-stack observability with APM, metrics, and logs)
    - New Relic (managed, APM-focused)
    - ELK Stack (log-focused observability)
    - Cloud-native (CloudWatch, Cloud Monitoring, Azure Monitor)
@@ -308,7 +309,92 @@ Provide instructions and saved objects for:
 - Response time percentiles from access logs
 - Index pattern setup
 
-## Phase 6: Review & Validate
+## Phase 6: OpenTelemetry Path
+
+If the user selects OpenTelemetry for vendor-neutral observability:
+
+> Reference: `references/opentelemetry.md` for collector config, auto-instrumentation snippets, and pipeline setup.
+
+### 6.1 OTel Collector Setup
+
+Deploy the OpenTelemetry Collector as a docker-compose service:
+- Use the `otel/opentelemetry-collector-contrib` image
+- Expose OTLP gRPC (4317) and OTLP HTTP (4318) receiver ports
+- Mount a `otel-collector-config.yaml` with receivers, processors, and exporters
+- Configure pipelines for traces, metrics, and logs independently
+
+### 6.2 Auto-Instrumentation
+
+For each detected language, add zero-code or minimal-code instrumentation:
+
+- **Node.js**: Install `@opentelemetry/auto-instrumentations-node` and `@opentelemetry/exporter-trace-otlp-grpc`. Bootstrap via `--require @opentelemetry/auto-instrumentations-node/register` or a `tracing.js` init file.
+- **Python**: Install `opentelemetry-distro` and `opentelemetry-instrumentation`. Run `opentelemetry-instrument` wrapper or call `configure_opentelemetry()` in code.
+- **Go**: Import `go.opentelemetry.io/contrib/instrumentation` packages for net/http, gRPC, and database drivers. Initialize a `TracerProvider` with OTLP exporter.
+- **C#/.NET**: Install `OpenTelemetry.AutoInstrumentation` NuGet package. Configure via environment variables (`OTEL_DOTNET_AUTO_HOME`, `CORECLR_ENABLE_PROFILING`).
+
+### 6.3 OTLP Exporter Configuration
+
+Set standard environment variables in the application service:
+- `OTEL_EXPORTER_OTLP_ENDPOINT` pointing to the collector
+- `OTEL_SERVICE_NAME` for service identification
+- `OTEL_RESOURCE_ATTRIBUTES` for environment and version metadata
+
+### 6.4 Backend Integration
+
+Connect the collector to one or more backends:
+- **Jaeger** for trace visualization (OTLP or Jaeger exporter)
+- **Grafana Tempo** for scalable trace storage (OTLP exporter)
+- **Prometheus** for metrics (Prometheus exporter on collector, or Prometheus remote-write)
+- **Loki** for logs (Loki exporter)
+
+Generate the appropriate exporter blocks in the collector config for the chosen backends.
+
+## Phase 7: Datadog Path
+
+If the user selects Datadog for managed observability:
+
+> Reference: `references/datadog.md` for agent setup, APM instrumentation, custom metrics, and alerting.
+
+### 7.1 Datadog Agent Setup
+
+Deploy the Datadog Agent as a docker-compose service:
+- Use the `gcr.io/datadoghq/agent` image
+- Set `DD_API_KEY` (from environment variable, never hardcoded)
+- Enable APM: `DD_APM_ENABLED=true`, expose port 8126
+- Enable logs: `DD_LOGS_ENABLED=true`, `DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL=true`
+- Mount `/var/run/docker.sock` and `/proc` for container and host metrics
+- Set `DD_SITE` for the correct Datadog region (e.g., `datadoghq.com`, `datadoghq.eu`)
+
+### 7.2 APM Instrumentation
+
+For each detected language, add Datadog tracing:
+
+- **Node.js**: Install `dd-trace`, require it at application entry (`dd-trace/init` or `dd-trace.init()`)
+- **Python**: Install `ddtrace`, run with `ddtrace-run` wrapper or patch manually
+- **Go**: Import `gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer`, call `tracer.Start()` with appropriate options
+- **C#/.NET**: Install `Datadog.Trace` NuGet package, enable automatic instrumentation via environment variables or `dd-trace-dotnet`
+
+### 7.3 Custom Metrics with DogStatsD
+
+- Configure the agent to receive DogStatsD on port 8125
+- Use language-specific clients (`hot-shots` for Node.js, `datadog` for Python) to emit custom gauges, counters, histograms, and distributions
+- Tag all metrics with `service`, `env`, and `version` for unified service tagging
+
+### 7.4 Log Collection
+
+- Configure application services with `com.datadoghq.ad.logs` Docker labels for automatic log collection
+- Ensure logs are in JSON format for automatic parsing
+- Map `source` and `service` labels for proper log pipeline routing in Datadog
+
+### 7.5 Monitors and Dashboards
+
+- Use the Datadog API or Terraform `datadog` provider to create monitors:
+  - Metric monitors for error rate, latency, and infrastructure thresholds
+  - APM monitors for service-level objectives (SLOs)
+  - Log monitors for error patterns
+- Create dashboards via API with widgets for key metrics, traces, and logs in a single view
+
+## Phase 8: Review & Validate
 
 After generating the monitoring setup:
 

@@ -326,3 +326,31 @@ public partial class AddUserTable : Migration
     }
 }
 ```
+
+## Laravel Migrations (PHP)
+
+```bash
+php artisan make:migration create_users_table
+php artisan migrate
+php artisan migrate:rollback
+php artisan migrate:rollback --step=2
+php artisan migrate:status
+php artisan migrate:fresh --seed  # WARNING: drops all tables
+php artisan db:seed
+# Generate SQL without running
+php artisan migrate --pretend
+```
+
+## Ecto (Elixir)
+
+```bash
+mix ecto.gen.migration create_users
+mix ecto.migrate
+mix ecto.rollback
+mix ecto.rollback --step 2
+mix ecto.migrations  # show status
+mix ecto.reset  # WARNING: drops and recreates
+mix run priv/repo/seeds.exs
+# Generate SQL
+mix ecto.migrate --log-migrations-sql
+```

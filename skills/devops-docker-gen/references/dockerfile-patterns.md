@@ -211,3 +211,51 @@ HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
 
 ENTRYPOINT ["dotnet", "MyApp.dll"]
 ```
+
+## PHP (Laravel)
+
+```dockerfile
+FROM php:8.3-fpm-alpine AS build
+WORKDIR /app
+RUN apk add --no-cache postgresql-dev && docker-php-ext-install pdo_pgsql opcache
+COPY composer.json composer.lock ./
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+RUN composer install --no-dev --no-scripts --optimize-autoloader
+COPY . .
+RUN composer dump-autoload --optimize
+
+FROM php:8.3-fpm-alpine AS production
+WORKDIR /app
+RUN apk add --no-cache postgresql-dev && docker-php-ext-install pdo_pgsql opcache
+COPY --from=build /app /app
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+RUN chown -R appuser:appgroup /app/storage /app/bootstrap/cache
+USER appuser
+EXPOSE 9000
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD php-fpm-healthcheck || exit 1
+CMD ["php-fpm"]
+```
+
+## Elixir (Phoenix)
+
+```dockerfile
+FROM elixir:1.17-alpine AS build
+WORKDIR /app
+ENV MIX_ENV=prod
+RUN mix local.hex --force && mix local.rebar --force
+COPY mix.exs mix.lock ./
+RUN mix deps.get --only prod && mix deps.compile
+COPY . .
+RUN mix assets.deploy && mix compile && mix release
+
+FROM alpine:3.20 AS production
+WORKDIR /app
+RUN apk add --no-cache libstdc++ libgcc ncurses-libs
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+COPY --from=build /app/_build/prod/rel/my_app ./
+RUN chown -R appuser:appgroup /app
+USER appuser
+EXPOSE 4000
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD wget -qO- http://localhost:4000/health || exit 1
+CMD ["bin/my_app", "start"]
+```

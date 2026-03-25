@@ -227,3 +227,39 @@ jobs:
     path: ~/.nuget/packages
     key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
 ```
+
+## PHP
+
+```yaml
+- uses: shivammathur/setup-php@v2
+  with:
+    php-version: '8.3'
+    extensions: pdo_pgsql, redis
+    coverage: xdebug
+- run: composer install --no-interaction --prefer-dist
+- run: php artisan test --parallel
+# Cache
+- uses: actions/cache@v4
+  with:
+    path: vendor
+    key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+```
+
+## Elixir
+
+```yaml
+- uses: erlef/setup-beam@v1
+  with:
+    otp-version: '27.0'
+    elixir-version: '1.17'
+- run: mix deps.get
+- run: mix compile --warnings-as-errors
+- run: mix test
+# Cache
+- uses: actions/cache@v4
+  with:
+    path: |
+      deps
+      _build
+    key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+```

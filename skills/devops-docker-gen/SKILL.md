@@ -20,6 +20,8 @@ Scan the project to understand its structure:
    - Check `Gemfile` -> Ruby (Rails, Sinatra...)
    - Check `pom.xml` / `build.gradle` -> Java (Spring Boot...)
    - Check `.csproj` / `.sln` -> C# (.NET, ASP.NET Core, Blazor...)
+   - Check `composer.json` -> PHP (Laravel, Symfony, WordPress...)
+   - Check `mix.exs` -> Elixir (Phoenix, LiveView...)
 
 2. **Detect existing Docker config**:
    - `Dockerfile` - analyze for improvements

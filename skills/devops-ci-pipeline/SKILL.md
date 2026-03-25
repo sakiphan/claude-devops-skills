@@ -24,6 +24,9 @@ Analyze the project:
    - Build command (`npm run build`, `go build`, `cargo build`, `dotnet build`, `dotnet publish`)
    - Test command (`dotnet test`)
    - Lint command (`dotnet format --verify-no-changes`)
+   - Build command (`composer install`, `mix compile`)
+   - Test command (`php artisan test`, `phpunit`, `mix test`)
+   - Lint command (`php-cs-fixer`, `mix format --check-formatted`)
    - Deploy command (if any)
 
 3. **Project specifics**:
@@ -35,7 +38,7 @@ Analyze the project:
 
 Parse `$ARGUMENTS` for provider. If not specified, ask:
 
-1. **CI Provider**: GitHub Actions (recommended), GitLab CI, or CircleCI?
+1. **CI Provider**: GitHub Actions (recommended), GitLab CI, CircleCI, or Bitbucket Pipelines?
 2. **Pipeline stages** - confirm detected, add missing:
    - Lint / Format check
    - Unit tests
@@ -86,6 +89,7 @@ Always include:
 - GitHub Actions: See [github-actions.md](references/github-actions.md)
 - GitLab CI: See [gitlab-ci.md](references/gitlab-ci.md)
 - CircleCI: See [circleci.md](references/circleci.md)
+- Bitbucket Pipelines: See [bitbucket-pipelines.md](references/bitbucket-pipelines.md)
 
 ## Phase 4: Review & Explain
 

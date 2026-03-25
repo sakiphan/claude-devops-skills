@@ -60,6 +60,18 @@ Analyze the project to determine which migration framework is in use:
 - **Config**: `DbContext` class, connection string in `appsettings.json`
 - **Commands**: `dotnet ef migrations add`, `dotnet ef database update`, `dotnet ef migrations list`
 
+### Laravel Migrations (PHP)
+- **Indicators**: `database/migrations/` directory, `artisan` command, `composer.json` with laravel
+- **Migration dir**: `database/migrations/`
+- **Config**: `config/database.php`, `.env` for connection details
+- **Commands**: `php artisan make:migration`, `php artisan migrate`, `php artisan migrate:rollback`, `php artisan migrate:status`
+
+### Ecto (Elixir)
+- **Indicators**: `priv/repo/migrations/` directory, `mix.exs` with ecto
+- **Migration dir**: `priv/repo/migrations/`
+- **Config**: `config/dev.exs`, `config/prod.exs` with `Ecto.Repo` configuration
+- **Commands**: `mix ecto.gen.migration`, `mix ecto.migrate`, `mix ecto.rollback`, `mix ecto.migrations`
+
 ### Raw SQL Files
 - **Indicators**: Numbered SQL files (001_init.sql, 002_add_users.sql) without a framework
 - **Suggest**: Adopt a migration framework for better tracking and rollback support

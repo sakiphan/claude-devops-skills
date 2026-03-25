@@ -20,6 +20,8 @@ First, analyze the project to understand what we're deploying:
    - `Gemfile` (Ruby)
    - `pom.xml` / `build.gradle` (Java)
    - `.csproj` / `.sln` / `global.json` (C# / .NET)
+   - `composer.json` (PHP - Laravel, Symfony...)
+   - `mix.exs` (Elixir - Phoenix...)
 
 2. **Detect existing deployment config**:
    - `vercel.json` or `.vercel/` -> Vercel
