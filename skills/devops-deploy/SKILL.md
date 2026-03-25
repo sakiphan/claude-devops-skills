@@ -94,14 +94,248 @@ If any check fails:
 
 ### Rollback Plan
 
-Before deploying, identify the rollback strategy:
-- **Vercel**: `vercel rollback` to previous deployment
-- **AWS ECS**: note current task definition revision for rollback
-- **Fly.io**: `fly releases` to identify previous release
-- **Railway**: automatic rollback via dashboard
-- **GCP Cloud Run**: `gcloud run services update-traffic --to-revisions=PREVIOUS`
+Before deploying, note the current deployment state so rollback is possible. Identify the rollback strategy per provider and tell the user the exact commands.
 
 Tell the user: "If something goes wrong, here's how to rollback: [command]"
+
+---
+
+#### Rollback: Vercel
+
+**Estimated rollback time:** ~10 seconds (instant alias swap)
+
+1. **List previous deployments:**
+   ```bash
+   vercel list --limit 10
+   # Or for a specific project:
+   vercel list <project-name> --limit 10
+   ```
+
+2. **Rollback command:**
+   ```bash
+   # Instant rollback to the previous production deployment
+   vercel rollback
+
+   # Rollback to a specific deployment by URL or ID
+   vercel rollback <deployment-url-or-id>
+   ```
+
+3. **Verify rollback succeeded:**
+   ```bash
+   # Check which deployment is currently active
+   vercel inspect <project-name> --scope <team>
+
+   # Health check the production URL
+   curl -s -o /dev/null -w "%{http_code}" https://<project>.vercel.app
+   ```
+
+---
+
+#### Rollback: AWS ECS
+
+**Estimated rollback time:** 2-5 minutes (new tasks must pass health checks)
+
+1. **List previous task definition revisions:**
+   ```bash
+   # List all revisions for the task definition family
+   aws ecs list-task-definitions --family-prefix <task-family> --sort DESC --max-items 10
+
+   # Describe the current running service to note the active revision
+   aws ecs describe-services --cluster <cluster> --services <service> \
+     --query "services[0].taskDefinition"
+   ```
+
+2. **Rollback command:**
+   ```bash
+   # Option A: Roll back to a specific task definition revision
+   aws ecs update-service \
+     --cluster <cluster> \
+     --service <service> \
+     --task-definition <task-family>:<previous-revision-number> \
+     --force-new-deployment
+
+   # Option B: Force redeployment of the current task definition
+   aws ecs update-service \
+     --cluster <cluster> \
+     --service <service> \
+     --force-new-deployment
+   ```
+
+3. **Verify rollback succeeded:**
+   ```bash
+   # Watch the deployment until stable (blocks until complete)
+   aws ecs wait services-stable --cluster <cluster> --services <service>
+
+   # Confirm the active task definition revision
+   aws ecs describe-services --cluster <cluster> --services <service> \
+     --query "services[0].{taskDef:taskDefinition, status:status, running:runningCount, desired:desiredCount}"
+
+   # Check that old tasks have drained
+   aws ecs list-tasks --cluster <cluster> --service-name <service> --desired-status RUNNING
+   ```
+
+---
+
+#### Rollback: AWS Lambda
+
+**Estimated rollback time:** ~5-15 seconds (alias pointer swap)
+
+1. **List previous versions:**
+   ```bash
+   # List published versions of the function
+   aws lambda list-versions-by-function --function-name <function-name> \
+     --query "Versions[-5:].[Version, Description, LastModified]" --output table
+
+   # List aliases to see which version is currently live
+   aws lambda list-aliases --function-name <function-name>
+   ```
+
+2. **Rollback command:**
+   ```bash
+   # Option A: Point the alias back to a previous version
+   aws lambda update-alias \
+     --function-name <function-name> \
+     --name <alias-name> \
+     --function-version <previous-version-number>
+
+   # Option B: Redeploy the previous version's code to $LATEST
+   #   First, get the code location of the previous version:
+   aws lambda get-function --function-name <function-name> --qualifier <previous-version>
+   #   Then update with the previous deployment package:
+   aws lambda update-function-code \
+     --function-name <function-name> \
+     --s3-bucket <bucket> --s3-key <previous-package-key>
+   ```
+
+3. **Verify rollback succeeded:**
+   ```bash
+   # Confirm the alias now points to the correct version
+   aws lambda get-alias --function-name <function-name> --name <alias-name>
+
+   # Invoke a quick smoke test
+   aws lambda invoke \
+     --function-name <function-name> \
+     --qualifier <alias-name> \
+     --payload '{}' /tmp/lambda-response.json && cat /tmp/lambda-response.json
+   ```
+
+---
+
+#### Rollback: GCP Cloud Run
+
+**Estimated rollback time:** ~10-30 seconds (traffic shift to existing revision)
+
+1. **List previous revisions:**
+   ```bash
+   # List all revisions for the service
+   gcloud run revisions list --service <service-name> --region <region> --limit 10
+
+   # Show current traffic allocation
+   gcloud run services describe <service-name> --region <region> \
+     --format="value(status.traffic)"
+   ```
+
+2. **Rollback command:**
+   ```bash
+   # Route 100% of traffic to a previous revision
+   gcloud run services update-traffic <service-name> \
+     --region <region> \
+     --to-revisions=<previous-revision-name>=100
+   ```
+
+3. **Verify rollback succeeded:**
+   ```bash
+   # Confirm traffic is routed to the correct revision
+   gcloud run services describe <service-name> --region <region> \
+     --format="value(status.traffic)"
+
+   # Health check the service URL
+   SERVICE_URL=$(gcloud run services describe <service-name> --region <region> --format="value(status.url)")
+   curl -s -o /dev/null -w "%{http_code}" "$SERVICE_URL"
+   ```
+
+---
+
+#### Rollback: Fly.io
+
+**Estimated rollback time:** 30-90 seconds (new machines with previous image)
+
+1. **List previous releases:**
+   ```bash
+   # Show release history with versions and image refs
+   fly releases --app <app-name>
+
+   # Show current status
+   fly status --app <app-name>
+   ```
+
+2. **Rollback command:**
+   ```bash
+   # Option A: Deploy the image from a previous release
+   fly deploy --image <previous-image-ref> --app <app-name>
+
+   # Option B: Rollback to the immediately previous release (if supported)
+   fly releases rollback --app <app-name>
+   ```
+
+3. **Verify rollback succeeded:**
+   ```bash
+   # Check release list - newest entry should reference the old image
+   fly releases --app <app-name>
+
+   # Confirm instances are healthy
+   fly status --app <app-name>
+
+   # Health check
+   fly ping <app-name>.fly.dev
+   curl -s -o /dev/null -w "%{http_code}" https://<app-name>.fly.dev
+   ```
+
+---
+
+#### Rollback: Railway
+
+**Estimated rollback time:** ~30-60 seconds (redeploy from previous snapshot)
+
+1. **List previous deployments:**
+   ```bash
+   # List recent deployments with status and timestamps
+   railway status
+
+   # View deployment history via the CLI
+   railway logs --deployment <deployment-id>
+   ```
+
+2. **Rollback command:**
+   ```bash
+   # Rollback to the previous successful deployment
+   railway rollback
+
+   # Or rollback to a specific deployment ID
+   railway rollback <deployment-id>
+   ```
+
+3. **Verify rollback succeeded:**
+   ```bash
+   # Confirm current active deployment
+   railway status
+
+   # Check the live URL responds correctly
+   curl -s -o /dev/null -w "%{http_code}" <railway-deployment-url>
+   ```
+
+---
+
+#### Rollback Quick Reference
+
+| Provider       | Rollback Command                                              | Time     |
+|----------------|---------------------------------------------------------------|----------|
+| Vercel         | `vercel rollback`                                             | ~10s     |
+| AWS ECS        | `aws ecs update-service --task-definition <prev> --force-new-deployment` | 2-5 min |
+| AWS Lambda     | `aws lambda update-alias --function-version <prev>`           | ~5-15s   |
+| GCP Cloud Run  | `gcloud run services update-traffic --to-revisions=<prev>=100`| ~10-30s  |
+| Fly.io         | `fly deploy --image <previous-image>`                         | 30-90s   |
+| Railway        | `railway rollback`                                            | ~30-60s  |
 
 ## Phase 4: Execute Deployment
 

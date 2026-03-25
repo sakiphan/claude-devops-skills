@@ -292,6 +292,70 @@ Generate:
 - Use `checkov` or `tfsec` for security scanning
 - Add pre-commit hooks for automated checks
 
+### Module Best Practices
+
+#### Recommended Module Directory Structure
+
+```
+terraform/
+├── modules/
+│   ├── networking/    (VPC, subnets, security groups)
+│   ├── compute/       (ECS, Lambda, EC2)
+│   ├── database/      (RDS, DynamoDB)
+│   └── storage/       (S3, EFS)
+├── environments/
+│   ├── dev/
+│   │   ├── main.tf    (calls modules with dev values)
+│   │   └── terraform.tfvars
+│   ├── staging/
+│   └── prod/
+└── shared/
+    └── backend.tf
+```
+
+Each module should be self-contained with its own `main.tf`, `variables.tf`, `outputs.tf`, and `README.md`.
+
+#### Module Input/Output Conventions
+
+- **Inputs**: Every module variable must have a `description` and explicit `type`. Use `default` values only when a sensible, safe default exists. Prefix variable names consistently (e.g., `vpc_cidr`, `vpc_name` for a networking module).
+- **Outputs**: Export all resource identifiers (IDs, ARNs, endpoints) that downstream modules or root configurations may need. Use `description` on every output. Mark secrets with `sensitive = true`.
+- **Naming**: Use snake_case for all variable and output names. Avoid abbreviations that reduce readability.
+
+#### Version Pinning for Modules
+
+Pin module sources to prevent unexpected changes:
+
+```hcl
+# Local module (path-based, version controlled with your repo)
+module "networking" {
+  source = "./modules/networking"
+}
+
+# Terraform Registry module (always pin a version)
+module "vpc" {
+  source  = "terraform-aws-modules/vpc/aws"
+  version = "5.5.1"
+}
+
+# Git source (pin to a tag or commit SHA, never a branch)
+module "custom" {
+  source = "git::https://github.com/org/terraform-modules.git//networking?ref=v1.2.0"
+}
+```
+
+Never use unversioned registry modules or branch references in production. For internal modules, tag releases and reference the tag.
+
+#### Workspaces vs. Separate Directories
+
+**Recommendation: Use separate directories per environment** (as shown in the structure above).
+
+| Approach | Pros | Cons |
+|----------|------|------|
+| **Separate directories** | Clear isolation, independent state files, different backend configs per env, easy to reason about | Some code duplication (mitigated by modules) |
+| **Workspaces** | Less duplication, single config | Shared backend, easy to accidentally apply to wrong env, limited per-workspace config |
+
+Workspaces are appropriate for ephemeral or identical environments (e.g., spinning up review apps). For long-lived environments (dev, staging, prod) with different configurations, separate directories with shared modules provide better safety and clarity.
+
 ## Phase 7: Execution Guide
 
 After generating Terraform files, provide step-by-step instructions:

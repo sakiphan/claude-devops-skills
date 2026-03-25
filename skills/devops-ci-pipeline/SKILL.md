@@ -156,6 +156,92 @@ If monorepo detected (turbo.json, nx.json, pnpm-workspace.yaml):
 - Cache at workspace root level
 - Run affected tests only: `turbo run test --filter=...[origin/main]`
 
+## Database Migrations in CI
+
+Database migrations are one of the riskiest steps in a deployment pipeline. They must be handled with explicit safety gates to prevent data loss and downtime.
+
+### Migration Safety Gates
+
+Always validate migrations before applying them:
+
+1. **Dry-run validation**: Run migration diff or check commands to verify what will change before any actual schema modification occurs.
+2. **Lock timeout configuration**: Set aggressive lock timeouts to prevent migrations from blocking production queries. A migration that cannot acquire a lock within a few seconds should fail rather than queue behind active transactions.
+3. **Separate migration job**: Run migrations as a dedicated job that executes before the application deployment job. Never bundle migrations inside the application startup process in CI.
+4. **Rollback testing**: Verify that down/revert migrations work by running them in CI against a test database. If a migration cannot be rolled back, flag it for manual review.
+
+### Example: GitHub Actions with Prisma
+
+```yaml
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run migrations (dry-run)
+        run: npx prisma migrate diff --exit-code
+        env:
+          DATABASE_URL: ${{ secrets.STAGING_DB_URL }}
+
+      - name: Apply migrations
+        if: github.ref == 'refs/heads/main'
+        run: npx prisma migrate deploy
+        env:
+          DATABASE_URL: ${{ secrets.PROD_DB_URL }}
+
+  deploy:
+    needs: migrate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy application
+        run: echo "Deploy only after migrations succeed"
+```
+
+### Other Migration Frameworks
+
+**Alembic (Python/SQLAlchemy):**
+```yaml
+- name: Check pending migrations
+  run: alembic check
+- name: Apply migrations
+  if: github.ref == 'refs/heads/main'
+  run: alembic upgrade head
+```
+
+**Django:**
+```yaml
+- name: Check migrations
+  run: python manage.py migrate --check --dry-run
+- name: Apply migrations
+  if: github.ref == 'refs/heads/main'
+  run: python manage.py migrate --noinput
+```
+
+**Flyway:**
+```yaml
+- name: Validate migrations
+  run: flyway validate
+- name: Apply migrations
+  if: github.ref == 'refs/heads/main'
+  run: flyway migrate
+```
+
+### Destructive Operation Safeguards
+
+Migrations containing destructive operations (`DROP TABLE`, `DROP COLUMN`, `TRUNCATE`, renaming columns with data loss) should **never be auto-applied**. Implement one of these safeguards:
+
+- **Manual approval gate**: Require a human to approve the pipeline step before destructive migrations execute.
+- **Migration linting**: Use tools like `squawk` (PostgreSQL), `skeema` (MySQL), or `atlas migrate lint` to detect destructive changes and fail the pipeline.
+- **Two-phase approach**: First deploy code that stops using the column/table, then deploy the migration that drops it in a subsequent release.
+
 ## Safety Rules
 
 - NEVER include actual secrets or tokens in pipeline files

@@ -1,5 +1,12 @@
 # Dockerfile Patterns by Language
 
+<!-- Layer Caching Strategy:
+     In every pattern below, the lockfile (package.json, requirements.txt, go.mod, etc.)
+     is copied BEFORE the rest of the source code. This ensures that the expensive
+     dependency-install layer is cached by Docker and only invalidated when dependencies
+     actually change — not on every source code edit. This single ordering trick can
+     cut rebuild times from minutes to seconds during development. -->
+
 ## Node.js (npm/pnpm)
 
 ```dockerfile
@@ -35,6 +42,8 @@ RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 USER appuser
 
 EXPOSE 3000
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:3000/health', (r) => {if(r.statusCode!==200) process.exit(1)})"
 CMD ["node", "dist/index.js"]
 ```
 
@@ -68,6 +77,8 @@ RUN groupadd -r appgroup && useradd -r -g appgroup appuser
 USER appuser
 
 EXPOSE 8000
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+  CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
 CMD ["gunicorn", "app.main:app", "--bind", "0.0.0.0:8000", "--workers", "4"]
 ```
 
@@ -91,6 +102,8 @@ FROM gcr.io/distroless/static-debian12:nonroot
 COPY --from=builder /app/server /server
 
 EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+  CMD ["/server", "-healthcheck"]
 ENTRYPOINT ["/server"]
 ```
 
@@ -117,10 +130,15 @@ COPY . .
 RUN cargo build --release --target x86_64-unknown-linux-musl
 
 # --- Production stage ---
-FROM scratch
+FROM alpine:3.20 AS production
+RUN apk add --no-cache wget ca-certificates
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 COPY --from=builder /app/target/x86_64-unknown-linux-musl/release/myapp /myapp
+USER appuser
 
 EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+  CMD wget -qO- http://localhost:8080/health || exit 1
 ENTRYPOINT ["/myapp"]
 ```
 
@@ -152,6 +170,8 @@ RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 USER appuser
 
 EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
+  CMD curl -f http://localhost:8080/actuator/health || exit 1
 ENTRYPOINT ["java", "org.springframework.boot.loader.launch.JarLauncher"]
 ```
 
@@ -176,6 +196,8 @@ RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 USER appuser
 
 EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
+  CMD curl -f http://localhost:8080/actuator/health || exit 1
 ENTRYPOINT ["java", "-jar", "app.jar"]
 ```
 
@@ -258,4 +280,60 @@ USER appuser
 EXPOSE 4000
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD wget -qO- http://localhost:4000/health || exit 1
 CMD ["bin/my_app", "start"]
+```
+
+## Ruby on Rails
+
+```dockerfile
+# --- Build stage ---
+FROM ruby:3.3-slim AS builder
+WORKDIR /app
+
+RUN apt-get update -qq && \
+    apt-get install --no-install-recommends -y \
+    build-essential libpq-dev nodejs npm git && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install bundler and dependencies (lockfile first for layer caching)
+COPY Gemfile Gemfile.lock ./
+RUN bundle config set --local deployment true && \
+    bundle config set --local without 'development test' && \
+    bundle install --jobs 4 --retry 3
+
+# Install JS dependencies if using importmap or jsbundling
+COPY package.json yarn.lock ./
+RUN npm install --production || true
+
+COPY . .
+
+# Precompile assets
+RUN SECRET_KEY_BASE=placeholder bundle exec rails assets:precompile
+
+# --- Production stage ---
+FROM ruby:3.3-slim AS production
+WORKDIR /app
+
+RUN apt-get update -qq && \
+    apt-get install --no-install-recommends -y \
+    libpq-dev curl && \
+    rm -rf /var/lib/apt/lists/*
+
+# Copy installed gems from builder
+COPY --from=builder /usr/local/bundle /usr/local/bundle
+COPY --from=builder /app /app
+
+# Non-root user
+RUN groupadd -r appgroup && useradd -r -g appgroup appuser && \
+    mkdir -p /app/tmp/pids /app/log && \
+    chown -R appuser:appgroup /app
+USER appuser
+
+ENV RAILS_ENV=production \
+    RAILS_LOG_TO_STDOUT=true \
+    RAILS_SERVE_STATIC_FILES=true
+
+EXPOSE 3000
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+  CMD curl -f http://localhost:3000/up || exit 1
+CMD ["bundle", "exec", "rails", "server", "-b", "0.0.0.0"]
 ```

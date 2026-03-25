@@ -69,6 +69,35 @@ Stage 3: runtime - Minimal production image
 - Clean up in the same layer (apt-get clean, rm -rf /var/lib/apt/lists/*)
 - Use alpine or distroless for production where possible
 
+### Multi-Platform Builds (ARM64 + AMD64)
+
+For Apple Silicon (M1/M2/M3/M4) users deploying to Linux servers:
+
+```bash
+# Create and use buildx builder
+docker buildx create --name multiarch --use
+
+# Build for both platforms
+docker buildx build --platform linux/amd64,linux/arm64 -t myapp:latest .
+
+# Build + push to registry in one step
+docker buildx build --platform linux/amd64,linux/arm64 -t registry/myapp:v1.0 --push .
+```
+
+In CI (GitHub Actions):
+```yaml
+- uses: docker/build-push-action@v6
+  with:
+    platforms: linux/amd64,linux/arm64
+    push: true
+    tags: registry/myapp:${{ github.sha }}
+```
+
+Tips:
+- Use `CGO_ENABLED=0` for Go to avoid cross-compilation issues
+- Rust: add both `x86_64-unknown-linux-musl` and `aarch64-unknown-linux-musl` targets
+- Node.js/Python: alpine images support both architectures natively
+
 ### Language-Specific Patterns
 
 Reference [dockerfile-patterns.md](references/dockerfile-patterns.md) for detailed patterns per language.
@@ -96,6 +125,24 @@ networks:       # Custom networks for isolation
 - Separate networks for frontend/backend isolation
 - Use `restart: unless-stopped` for production
 - Pin image versions for all services
+- Use `init: true` for proper signal handling (PID 1 problem):
+  ```yaml
+  # Proper signal handling (PID 1 problem)
+  # Without init, your app runs as PID 1 and won't handle SIGTERM properly,
+  # causing 10s forced shutdown delays and zombie child processes.
+  services:
+    app:
+      init: true  # Adds tini as PID 1 — forwards signals, reaps zombies
+  ```
+- Configure logging on every service to prevent unbounded log growth:
+  ```yaml
+  # Add to every service for production
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "10m"
+      max-file: "3"
+  ```
 
 Reference [compose-patterns.md](references/compose-patterns.md) for service-specific configs.
 

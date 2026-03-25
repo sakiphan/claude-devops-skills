@@ -25,7 +25,7 @@ Parse `$ARGUMENTS` to determine mode:
 
 Ask the user:
 1. **Application name** and **namespace**
-2. **What resources?** Deployment, Service, Ingress, ConfigMap, Secret, HPA, PDB
+2. **What resources?** Deployment, Service, Ingress, ConfigMap, Secret, HPA, PDB, NetworkPolicy
 3. **Container image** and tag
 4. **Port(s)** the application listens on
 5. **Environment**: dev/staging/prod (affects replicas, resources, etc.)
@@ -81,6 +81,110 @@ For EVERY manifest, apply these best practices:
 - CPU and memory targets
 - minReplicas / maxReplicas appropriate for environment
 - Behavior: scale up fast, scale down slow
+```
+
+**NetworkPolicy (default deny + allow app traffic):**
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ app }}-netpol
+spec:
+  podSelector:
+    matchLabels:
+      app: {{ app }}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: {{ app }}-frontend
+      ports:
+        - port: {{ port }}
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: {{ app }}-db
+      ports:
+        - port: 5432
+    - to:  # Allow DNS
+        - namespaceSelector: {}
+      ports:
+        - port: 53
+          protocol: UDP
+```
+
+**PodDisruptionBudget:**
+```yaml
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ app }}-pdb
+spec:
+  minAvailable: 1  # or maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: {{ app }}
+```
+
+**Readiness Probe Examples by Framework:**
+
+Node.js (Express):
+```yaml
+readinessProbe:
+  httpGet:
+    path: /health
+    port: 3000
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  timeoutSeconds: 3
+  failureThreshold: 3
+```
+
+Python (FastAPI/Flask):
+```yaml
+readinessProbe:
+  httpGet:
+    path: /healthz
+    port: 8000
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+```
+
+Go:
+```yaml
+readinessProbe:
+  httpGet:
+    path: /readyz
+    port: 8080
+  initialDelaySeconds: 3
+  periodSeconds: 10
+  timeoutSeconds: 2
+  failureThreshold: 3
+```
+
+Java (Spring Boot):
+```yaml
+readinessProbe:
+  httpGet:
+    path: /actuator/health/readiness
+    port: 8080
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+startupProbe:
+  httpGet:
+    path: /actuator/health/liveness
+    port: 8080
+  initialDelaySeconds: 15
+  periodSeconds: 5
+  failureThreshold: 20  # Allow up to 100s for slow JVM startup
 ```
 
 Reference: [manifest-patterns.md](references/manifest-patterns.md)

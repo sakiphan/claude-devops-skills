@@ -127,6 +127,37 @@ Reference: [k8s-checks.md](references/k8s-checks.md)
 
 Run `npm audit`, `pip audit`, `govulncheck`, or `cargo audit` if applicable.
 
+### Supply Chain Security
+
+| ID | Severity | Check |
+|----|----------|-------|
+| SC001 | CRITICAL | No container image scanning (Trivy/Grype) in CI |
+| SC002 | HIGH | No SBOM generation (syft/cyclonedx) |
+| SC003 | HIGH | Images not signed (Cosign/Notation) |
+| SC004 | HIGH | Base images from untrusted registries |
+| SC005 | MEDIUM | No image digest pinning (using tags only) |
+| SC006 | MEDIUM | No vulnerability threshold in CI (allow all severities) |
+
+Detection commands:
+
+```bash
+# Check for Trivy/Grype in CI configs
+grep -rnE '(trivy|grype|anchore|snyk container)' .github/workflows/ .gitlab-ci.yml .circleci/ 2>/dev/null
+
+# Check for SBOM generation steps
+grep -rnE '(syft|cyclonedx|spdx|sbom)' .github/workflows/ .gitlab-ci.yml .circleci/ 2>/dev/null
+
+# Check for cosign verify in deployment
+grep -rnE '(cosign sign|cosign verify|notation sign|notation verify)' .github/workflows/ .gitlab-ci.yml k8s/ manifests/ 2>/dev/null
+
+# Check for digest pinning in Dockerfiles/K8s manifests
+grep -rnE 'image:.*@sha256:' Dockerfile* k8s/ manifests/ docker-compose*.yml 2>/dev/null
+grep -rnE '^FROM\s+\S+@sha256:' Dockerfile* 2>/dev/null
+
+# Check for vulnerability severity threshold in CI
+grep -rnE '(--severity|--exit-code|--fail-on|severity-cutoff)' .github/workflows/ .gitlab-ci.yml 2>/dev/null
+```
+
 ## Phase 4: Secret Detection Deep Scan
 
 Grep for these patterns across ALL files (not just infra):

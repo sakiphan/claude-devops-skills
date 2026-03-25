@@ -183,6 +183,192 @@ Generate `alertmanager.yml` with:
 - Repeat interval configuration
 - Grouping by alertname and service
 
+## SLO/SLI Framework
+
+Use this framework to move from simple threshold-based alerting to SLO-driven observability. SLOs produce fewer, more meaningful alerts and give teams a clear error budget to manage risk.
+
+### Define SLIs (Service Level Indicators)
+
+SLIs are the quantitative measures of your service's behavior. Define these for every user-facing service:
+
+**Availability SLI:**
+```
+availability = successful_requests / total_requests
+```
+PromQL:
+```promql
+sum(rate(http_requests_total{status!~"5.."}[5m]))
+/ sum(rate(http_requests_total[5m]))
+```
+
+**Latency SLI:**
+```
+latency = requests_below_threshold / total_requests
+```
+PromQL (percentage of requests under 500ms):
+```promql
+sum(rate(http_request_duration_seconds_bucket{le="0.5"}[5m]))
+/ sum(rate(http_request_duration_seconds_count[5m]))
+```
+
+**Throughput SLI:**
+```
+throughput = requests_per_second
+```
+PromQL:
+```promql
+sum(rate(http_requests_total[5m]))
+```
+
+### Define SLOs (Service Level Objectives)
+
+SLOs set the target for each SLI. They define the acceptable level of unreliability.
+
+| SLO Target | Allowed Downtime/Month | Allowed Downtime/Year |
+|------------|------------------------|----------------------|
+| 99%        | 7h 18m                 | 3d 15h 36m           |
+| 99.5%      | 3h 39m                 | 1d 19h 48m           |
+| 99.9%      | 43.8m                  | 8h 45m 36s           |
+| 99.95%     | 21.9m                  | 4h 22m 48s           |
+| 99.99%     | 4.38m                  | 52m 33.6s            |
+
+**Error Budget Calculation:**
+```
+error_budget = 100% - SLO
+```
+Example: With a 99.9% availability SLO, the error budget is 0.1%. Over a 30-day window, the service can be down for 43.8 minutes before the budget is exhausted.
+
+**Remaining Error Budget (PromQL):**
+```promql
+# Fraction of error budget remaining over 30d window
+1 - (
+  (1 - (
+    sum(rate(http_requests_total{status!~"5.."}[30d]))
+    / sum(rate(http_requests_total[30d]))
+  )) / (1 - 0.999)
+)
+```
+
+### Burn Rate Alerting
+
+Burn rate alerting replaces simple threshold alerts. Instead of alerting on "error rate > 5%", alert when errors are consuming the error budget faster than expected.
+
+**Burn rate** = actual error rate / error budget rate. A burn rate of 1 means the budget will be exactly exhausted by the end of the window. A burn rate of 14.4 means 2% of the monthly budget will be consumed in 1 hour.
+
+**Critical: 1h burn rate > 14.4x (consumes 2% of monthly budget in 1h):**
+```yaml
+- alert: HighErrorBurnRate
+  expr: |
+    (
+      sum(rate(http_requests_total{status=~"5.."}[1h]))
+      / sum(rate(http_requests_total[1h]))
+    ) > (14.4 * 0.001)
+  for: 2m
+  labels:
+    severity: critical
+  annotations:
+    summary: "Burning error budget too fast"
+    description: "Error burn rate is {{ $value | humanizePercentage }} over the last 1h, consuming more than 2% of the monthly error budget per hour."
+    runbook_url: "https://runbooks.example.com/slo-burn-rate"
+```
+
+**Multi-window burn rate (reduces false positives):**
+Both a long window (1h) and a short window (5m) must exceed the burn rate to fire. This ensures the alert reflects a sustained issue, not a transient spike.
+```yaml
+- alert: HighErrorBurnRate
+  expr: |
+    (
+      sum(rate(http_requests_total{status=~"5.."}[1h]))
+      / sum(rate(http_requests_total[1h]))
+    ) > (14.4 * 0.001)
+    and
+    (
+      sum(rate(http_requests_total{status=~"5.."}[5m]))
+      / sum(rate(http_requests_total[5m]))
+    ) > (14.4 * 0.001)
+  for: 2m
+  labels:
+    severity: critical
+  annotations:
+    summary: "Sustained high error burn rate (multi-window)"
+    description: "Both 1h and 5m error burn rates exceed 14.4x the budget rate. Immediate investigation required."
+```
+
+**Warning: 6h burn rate > 6x (consumes 5% of monthly budget in 6h):**
+```yaml
+- alert: ErrorBurnRateWarning
+  expr: |
+    (
+      sum(rate(http_requests_total{status=~"5.."}[6h]))
+      / sum(rate(http_requests_total[6h]))
+    ) > (6 * 0.001)
+    and
+    (
+      sum(rate(http_requests_total{status=~"5.."}[30m]))
+      / sum(rate(http_requests_total[30m]))
+    ) > (6 * 0.001)
+  for: 5m
+  labels:
+    severity: warning
+  annotations:
+    summary: "Elevated error burn rate"
+    description: "Error burn rate over 6h is consuming budget at 6x the sustainable rate."
+```
+
+### Error Budget Dashboard
+
+Create a Grafana dashboard panel showing remaining error budget. Place this in `monitoring/grafana/dashboards/slo-overview.json`.
+
+Key panels to include:
+
+1. **Budget Remaining (Gauge):** Percentage of error budget remaining for the current 30-day window. Color thresholds: green > 50%, yellow > 25%, red <= 25%.
+
+2. **Budget Burn-Down (Timeseries):** Shows error budget consumption over time. A flat line means no errors; a steep drop indicates an incident.
+
+3. **SLI Over Time (Timeseries):** Current availability SLI plotted against the SLO target line (e.g., 99.9% horizontal line).
+
+4. **Burn Rate (Timeseries):** Current burn rate with threshold lines at 1x (sustainable), 6x (warning), and 14.4x (critical).
+
+5. **Incident Impact Table:** Log of periods where burn rate exceeded thresholds, showing start time, duration, and budget consumed.
+
+### RED Method Quick Reference
+
+The RED method provides three key metrics for every request-driven service. Use these as the foundation for application dashboards and SLIs.
+
+**Rate** -- requests per second:
+```promql
+sum(rate(http_requests_total[5m]))
+```
+
+**Errors** -- failed requests per second:
+```promql
+sum(rate(http_requests_total{status=~"5.."}[5m]))
+```
+
+**Duration** -- latency distribution:
+```promql
+histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[5m]))
+```
+
+Additional useful derivations:
+```promql
+# Error percentage
+sum(rate(http_requests_total{status=~"5.."}[5m]))
+/ sum(rate(http_requests_total[5m])) * 100
+
+# p50 latency
+histogram_quantile(0.50, rate(http_request_duration_seconds_bucket[5m]))
+
+# p95 latency
+histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))
+
+# Apdex score approximation (satisfied < 0.5s, tolerating < 2s)
+(
+  sum(rate(http_request_duration_seconds_bucket{le="0.5"}[5m]))
+  + sum(rate(http_request_duration_seconds_bucket{le="2.0"}[5m]))
+) / 2 / sum(rate(http_request_duration_seconds_count[5m]))
+```
+
 ## Phase 4: Application Instrumentation
 
 ### Node.js (Express/Fastify/Koa)

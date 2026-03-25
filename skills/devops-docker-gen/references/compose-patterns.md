@@ -217,6 +217,174 @@ traefik:
 #     - "traefik.http.routers.app.tls.certresolver=letsencrypt"
 ```
 
+## Kafka + Zookeeper
+
+```yaml
+zookeeper:
+  image: confluentinc/cp-zookeeper:7.7.0
+  restart: unless-stopped
+  environment:
+    ZOOKEEPER_CLIENT_PORT: 2181
+    ZOOKEEPER_TICK_TIME: 2000
+  volumes:
+    - zookeeper_data:/var/lib/zookeeper/data
+  healthcheck:
+    test: ["CMD", "nc", "-z", "localhost", "2181"]
+    interval: 10s
+    timeout: 5s
+    retries: 5
+  deploy:
+    resources:
+      limits:
+        memory: 512M
+
+kafka:
+  image: confluentinc/cp-kafka:7.7.0
+  restart: unless-stopped
+  depends_on:
+    zookeeper:
+      condition: service_healthy
+  environment:
+    KAFKA_BROKER_ID: 1
+    KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+    KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+    KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+  ports:
+    - "9092:9092"
+  volumes:
+    - kafka_data:/var/lib/kafka/data
+  healthcheck:
+    test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+    interval: 15s
+    timeout: 10s
+    retries: 5
+  deploy:
+    resources:
+      limits:
+        memory: 1G
+```
+
+## MinIO (S3-Compatible Storage)
+
+```yaml
+minio:
+  image: minio/minio:RELEASE.2024-01-01T00-00-00Z
+  restart: unless-stopped
+  command: server /data --console-address ":9001"
+  environment:
+    MINIO_ROOT_USER: ${MINIO_USER:-minioadmin}
+    MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD}
+  volumes:
+    - minio_data:/data
+  ports:
+    - "9000:9000"
+    - "9001:9001"
+  healthcheck:
+    test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+    interval: 15s
+    timeout: 5s
+    retries: 3
+  deploy:
+    resources:
+      limits:
+        memory: 512M
+```
+
+## Background Worker
+
+```yaml
+# Generic worker pattern — adapt command for your framework:
+#   Node.js:  npm run worker
+#   Python:   celery -A app worker --loglevel=info
+#   Ruby:     bundle exec sidekiq
+#   Go:       /app/worker
+worker:
+  build: .
+  command: npm run worker
+  restart: unless-stopped
+  init: true
+  depends_on:
+    redis:
+      condition: service_healthy
+  environment:
+    - QUEUE_NAME=default
+    - WORKER_CONCURRENCY=4
+  deploy:
+    resources:
+      limits:
+        cpus: '0.5'
+        memory: 512M
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "10m"
+      max-file: "3"
+
+# Scheduler/cron companion (Python Celery Beat example):
+# scheduler:
+#   build: .
+#   command: celery -A app beat --loglevel=info
+#   depends_on:
+#     redis:
+#       condition: service_healthy
+```
+
+## Network Isolation
+
+```yaml
+# Separate frontend/backend networks for security
+networks:
+  frontend:
+    driver: bridge
+  backend:
+    driver: bridge
+
+# Usage in services:
+# nginx:
+#   networks: [frontend, backend]
+# app:
+#   networks: [backend]
+# postgres:
+#   networks: [backend]
+```
+
+## Logging Configuration
+
+```yaml
+# Add to every production service to prevent unbounded log growth.
+# Use a YAML anchor to avoid repetition across services.
+x-logging: &default-logging
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "10m"    # rotate after 10MB
+      max-file: "3"      # keep 3 rotated files
+
+# Usage — merge into any service:
+# services:
+#   app:
+#     <<: *default-logging
+#     image: myapp:latest
+#   worker:
+#     <<: *default-logging
+#     image: myapp:latest
+#     command: npm run worker
+```
+
+## PID 1 Signal Handling (init: true)
+
+```yaml
+# Containers run the app as PID 1 by default. Most apps do NOT handle
+# SIGTERM/SIGCHLD properly as PID 1, causing slow shutdowns (10s timeout)
+# and zombie processes. Adding `init: true` inserts tini as PID 1.
+services:
+  app:
+    build: .
+    init: true   # Adds tini as PID 1 — proper signal forwarding & zombie reaping
+    restart: unless-stopped
+```
+
 ## Volumes (declare at bottom of compose file)
 
 ```yaml
@@ -228,4 +396,7 @@ volumes:
   rabbitmq_data:
   es_data:
   traefik_certs:
+  zookeeper_data:
+  kafka_data:
+  minio_data:
 ```

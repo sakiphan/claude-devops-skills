@@ -1,5 +1,33 @@
 # Encrypting Env Files for Team Sharing
 
+## Tool Comparison
+
+| Feature | git-crypt | SOPS + age | 1Password CLI | Doppler |
+|---------|-----------|------------|---------------|---------|
+| Cost | Free | Free | $8/user/mo | $18/user/mo |
+| Setup time | 5 min | 15 min | 30 min | 20 min |
+| Best for | Small teams | Mid teams | Enterprise | SaaS teams |
+| CI/CD native | Manual | Good | Good | Excellent |
+| Per-value encrypt | No (full file) | Yes | Yes | Yes |
+| Access revocation | Hard (re-encrypt) | Easy (re-key) | Easy (remove) | Easy (remove) |
+| Audit log | No | No | Yes | Yes |
+| Learning curve | Low | Medium | Medium | Low |
+| Offline access | Yes | Yes | No | No |
+
+## Decision Guide
+
+Choose the right tool based on your team's constraints:
+
+- **Use git-crypt if**: You have a small team (fewer than 5 developers), your secret management needs are simple, you have no compliance or audit requirements, and you want the fastest possible setup with zero cost.
+
+- **Use SOPS + age if**: You need per-value encryption so that diffs remain readable, you manage multiple environments with different secret sets, you need solid CI/CD integration without a paid service, or you work on a mid-size team where access control and re-keying matter.
+
+- **Use 1Password CLI if**: Your team already uses 1Password for credential management, you need audit logs showing who accessed which secrets and when, you have compliance requirements (SOC 2, HIPAA) that demand access tracking, or you want non-technical team members to manage secrets through a familiar UI.
+
+- **Use Doppler if**: You want a fully managed service with no self-hosted infrastructure, you need real-time secret syncing across multiple environments and platforms, you require built-in secret rotation and change history, or your team primarily deploys SaaS applications with frequent environment changes.
+
+---
+
 ## git-crypt
 
 Transparent encryption for files in git. Files are encrypted on push, decrypted on pull.

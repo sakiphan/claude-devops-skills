@@ -140,6 +140,83 @@ Find recurring issues and trends:
    - Growing error count over days
    - Memory usage trending upward between restarts
 
+### Strategy 3b: Distributed Trace Correlation
+
+When debugging issues across multiple services, trace IDs are the key to reconstructing the full request journey.
+
+#### Finding Trace IDs in Logs
+
+Trace IDs appear in logs under various formats depending on the framework and infrastructure:
+
+```bash
+# Common trace ID patterns
+grep -oE 'trace_id=([a-f0-9-]+)' logs.txt
+grep -oE 'x-request-id:\s*([a-f0-9-]+)' logs.txt
+grep -oE 'X-Amzn-Trace-Id:\s*Root=[^\s;]+' logs.txt
+grep -oE 'traceId["\s:=]+([a-f0-9]+)' logs.txt
+grep -oE 'dd\.trace_id=([0-9]+)' logs.txt              # Datadog
+grep -oE 'uber-trace-id:\s*([a-f0-9]+)' logs.txt       # Jaeger
+```
+
+#### Cross-Service Request Flow Reconstruction
+
+Once you have a trace ID, search across all service logs to build the full request flow:
+
+```bash
+# Search across multiple log files or services
+grep "abc123" api-gateway.log order-service.log payment-service.log notification-service.log
+
+# Kubernetes: search across all pods in a namespace
+kubectl logs -l app.kubernetes.io/part-of=myapp --all-containers -n production | grep "abc123"
+
+# Docker Compose: search all services
+docker compose logs | grep "abc123"
+```
+
+Reconstruct the flow as a timeline showing service hops, durations, and outcomes:
+
+```
+Request Flow (trace: abc123)
+─────────────────────────────
+10:23:01.001  api-gateway     → POST /api/orders (200ms)
+10:23:01.050  order-service   → Validate order (30ms)
+10:23:01.080  payment-service → Charge card (150ms)
+10:23:01.230  order-service   → Save to DB (20ms)
+10:23:01.250  notification    → Send email (async)
+```
+
+This visualization immediately reveals which service introduced latency or where a failure occurred in the chain.
+
+#### Correlating Across Log Platforms
+
+In real-world systems, logs for a single request are often spread across multiple platforms:
+
+1. **CloudWatch + Application Logs**: Use the trace ID to query CloudWatch Log Insights:
+   ```
+   fields @timestamp, @message
+   | filter @message like /abc123/
+   | sort @timestamp asc
+   ```
+
+2. **kubectl logs + CloudWatch**: Extract the trace from pod logs, then search CloudWatch for the same trace to find ALB or API Gateway entries:
+   ```bash
+   # Get trace from application pod
+   kubectl logs deploy/order-service -n prod | grep "trace_id" | head -5
+   # Then query CloudWatch for that trace in the load balancer logs
+   aws logs filter-log-events --log-group-name /aws/alb/myapp \
+     --filter-pattern '"abc123"'
+   ```
+
+3. **Multi-service correlation**: When services use different log formats, normalize timestamps to UTC and sort all entries together:
+   ```bash
+   # Merge, filter by trace, sort by timestamp
+   cat api-gateway.log order-service.log payment-service.log \
+     | grep "abc123" \
+     | sort -t' ' -k1,2
+   ```
+
+If no trace ID exists in the logs, fall back to correlating by timestamp windows and matching request parameters (IP, user ID, endpoint path).
+
 ### Strategy 4: Request Correlation
 
 Trace a specific request across services:
