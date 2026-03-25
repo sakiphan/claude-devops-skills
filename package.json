@@ -1,0 +1,38 @@
+{
+  "name": "claude-skills-devops",
+  "version": "1.0.0",
+  "description": "Interactive DevOps & Infrastructure skills for Claude Code",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "claude-skills-devops": "./bin/claude-skills.mjs"
+  },
+  "scripts": {
+    "postinstall": "node scripts/install.mjs",
+    "preuninstall": "node scripts/uninstall.mjs"
+  },
+  "files": [
+    "bin/",
+    "scripts/",
+    "skills/"
+  ],
+  "keywords": [
+    "claude",
+    "claude-code",
+    "skills",
+    "devops",
+    "infrastructure",
+    "docker",
+    "kubernetes",
+    "ci-cd",
+    "deployment"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sakiphan/claude-skills-devops"
+  },
+  "author": "sakiphan"
+}

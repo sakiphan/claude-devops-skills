@@ -1,0 +1,5 @@
+test-project/
+.git/
+.claude/
+tasks/
+*.output
