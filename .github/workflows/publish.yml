@@ -36,13 +36,14 @@ jobs:
       - name: Bump patch version
         id: bump
         run: |
-          IFS='.' read -r major minor patch <<< "${{ steps.version.outputs.current }}"
-          new_version="${major}.${minor}.$((patch + 1))"
-          node -e "
+          new_version=$(node -e "
             const pkg = require('./package.json');
-            pkg.version = '${new_version}';
+            const [major, minor, patch] = pkg.version.split('.').map(Number);
+            const v = major + '.' + minor + '.' + (patch + 1);
+            pkg.version = v;
             require('fs').writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
-          "
+            console.log(v);
+          ")
           echo "new=${new_version}" >> $GITHUB_OUTPUT
 
       - name: Commit version bump
