@@ -326,38 +326,7 @@ claude-skills-devops uninstall         # clean removal
 
 ## Changelog
 
-### v1.3.2
-- Supply chain security: GitHub Actions CI, npm provenance, SECURITY.md
-- SHA-pinned actions, matrix testing (Node 18/20/22)
-- Added `.gitignore`, `package-lock.json`
-
-### v1.3.1
-- Fix: no more `.bak` duplicate skills on reinstall
-- CLI: `info <skill>` command — show details, references, size
-- CLI: `update` command — one-command update from npm
-- CLI: `doctor` now shows version, per-skill stats, .bak detection
-
-### v1.3.0
-- New `/devops-secrets` skill (SOPS, Vault, AWS SM, External Secrets Operator)
-
-### v1.2.0
-- Audit: before/after remediation examples + supply chain security
-- Deploy: per-provider rollback procedures
-- Docker: multi-platform builds, Kafka/MinIO/worker patterns
-- K8s: NetworkPolicy + PDB + readiness probes
-- Monitor: SLO/SLI framework + burn rate alerting
-- CI: database migration safety gates
-- Terraform: reusable module patterns
-- Log Analyzer: distributed trace correlation
-- Env Sync: `analyze` mode (9 languages)
-
-### v1.1.0
-- OpenTelemetry + Datadog monitoring
-- PHP + Elixir language support
-- ArgoCD + Kustomize + Bitbucket Pipelines
-
-### v1.0.0
-- Initial release with 10 skills
+See [Releases](https://github.com/sakiphan/claude-devops-skills/releases) for full changelog.
 
 ## Uninstall
 
