@@ -8,6 +8,7 @@ on:
       - 'bin/**'
       - 'scripts/**'
       - 'package.json'
+      - '.github/workflows/publish.yml'
 
 permissions:
   contents: write
