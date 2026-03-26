@@ -1,0 +1,14 @@
+node_modules/
+.env
+.env.*
+!.env.example
+.DS_Store
+*.log
+*.output
+.claude/
+tasks/
+test-project/
+dist/
+coverage/
+*.tgz
+.npm/

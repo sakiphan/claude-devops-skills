@@ -1,5 +1,8 @@
 test-project/
 .git/
+.github/
 .claude/
 tasks/
 *.output
+*.tgz
+SECURITY.md

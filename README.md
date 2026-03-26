@@ -16,6 +16,7 @@
   <a href="https://www.npmjs.com/package/claude-skills-devops"><img src="https://img.shields.io/npm/dm/claude-skills-devops.svg?style=flat-square&color=blue&logo=npm&logoColor=white" alt="downloads" /></a>
   <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-green.svg?style=flat-square" alt="license" /></a>
   <a href="https://github.com/sakiphan/claude-skills-devops"><img src="https://img.shields.io/github/stars/sakiphan/claude-skills-devops?style=flat-square&logo=github" alt="stars" /></a>
+  <a href="https://github.com/sakiphan/claude-skills-devops/actions"><img src="https://img.shields.io/github/actions/workflow/status/sakiphan/claude-skills-devops/ci.yml?style=flat-square&logo=github-actions&logoColor=white&label=CI" alt="CI" /></a>
 </p>
 
 <p align="center">
@@ -324,6 +325,11 @@ claude-skills-devops uninstall         # clean removal
 </details>
 
 ## Changelog
+
+### v1.3.2
+- Supply chain security: GitHub Actions CI, npm provenance, SECURITY.md
+- SHA-pinned actions, matrix testing (Node 18/20/22)
+- Added `.gitignore`, `package-lock.json`
 
 ### v1.3.1
 - Fix: no more `.bak` duplicate skills on reinstall
