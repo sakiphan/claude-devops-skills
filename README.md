@@ -289,13 +289,47 @@ Supports: Prisma, Alembic, Knex, TypeORM, Drizzle, Django, Flyway, EF Core, Lara
 ## CLI
 
 ```bash
-claude-skills-devops list        # show installed skills
-claude-skills-devops doctor      # verify all skills healthy
-claude-skills-devops install     # reinstall after update
-claude-skills-devops uninstall   # clean removal
+claude-skills-devops list              # show installed skills
+claude-skills-devops info k8s          # skill details, references, size
+claude-skills-devops doctor            # health check with version & stats
+claude-skills-devops update            # update to latest from npm
+claude-skills-devops install           # reinstall skills
+claude-skills-devops uninstall         # clean removal
 ```
 
+<details>
+<summary><strong>Example: <code>doctor</code> output</strong></summary>
+
+```
+[claude-skills-devops] Health check:
+
+  Package version:   v1.3.1
+  Manifest version:  v1.3.1
+  Installed at:      2026-03-26T08:30:16.692Z
+
+  ✓ /devops-ci-pipeline (29.7KB, 5 files, 4 refs)
+  ✓ /devops-deploy (27.7KB, 6 files, 5 refs)
+  ✓ /devops-docker-gen (25.2KB, 3 files, 2 refs)
+  ✓ /devops-secrets (79.0KB, 5 files, 4 refs)
+  ...
+
+  ─────────────────────────────
+  Skills:     11
+  Files:      47
+  References: 36
+  Total size: 388.3KB
+  Status:     ✓ Healthy
+```
+
+</details>
+
 ## Changelog
+
+### v1.3.1
+- Fix: no more `.bak` duplicate skills on reinstall
+- CLI: `info <skill>` command — show details, references, size
+- CLI: `update` command — one-command update from npm
+- CLI: `doctor` now shows version, per-skill stats, .bak detection
 
 ### v1.3.0
 - New `/devops-secrets` skill (SOPS, Vault, AWS SM, External Secrets Operator)
