@@ -73,6 +73,8 @@ Claude: Analyzing project... Node.js + Express detected.
 
 Each skill lives in `~/.claude/skills/` with a `SKILL.md` and optional `references/` directory.
 
+> **Note:** Skills don't include any SDKs or API clients. They teach Claude *what to run and in what order* using your local CLI tools (`aws`, `gcloud`, `kubectl`, `docker`, `flyctl`, `vercel`, etc.). You need the relevant CLI installed and authenticated on your machine.
+
 ---
 
 ## 11 Skills
