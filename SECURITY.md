@@ -13,7 +13,7 @@ If you discover a security vulnerability in this package, please report it respo
 
 **Do NOT open a public issue.**
 
-Instead, please email **security@sakiphan.dev** or open a [private security advisory](https://github.com/sakiphan/claude-skills-devops/security/advisories/new) on GitHub.
+Instead, please email **security@sakiphan.dev** or open a [private security advisory](https://github.com/sakiphan/claude-devops-skills/security/advisories/new) on GitHub.
 
 ### What to include
 

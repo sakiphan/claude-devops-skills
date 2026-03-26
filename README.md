@@ -15,13 +15,13 @@
   <a href="https://www.npmjs.com/package/claude-skills-devops"><img src="https://img.shields.io/npm/v/claude-skills-devops.svg?style=flat-square&color=CB3837&logo=npm&logoColor=white" alt="npm" /></a>
   <a href="https://www.npmjs.com/package/claude-skills-devops"><img src="https://img.shields.io/npm/dm/claude-skills-devops.svg?style=flat-square&color=blue&logo=npm&logoColor=white" alt="downloads" /></a>
   <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-green.svg?style=flat-square" alt="license" /></a>
-  <a href="https://github.com/sakiphan/claude-skills-devops"><img src="https://img.shields.io/github/stars/sakiphan/claude-skills-devops?style=flat-square&logo=github" alt="stars" /></a>
-  <a href="https://github.com/sakiphan/claude-skills-devops/actions"><img src="https://img.shields.io/github/actions/workflow/status/sakiphan/claude-skills-devops/ci.yml?style=flat-square&logo=github-actions&logoColor=white&label=CI" alt="CI" /></a>
+  <a href="https://github.com/sakiphan/claude-devops-skills"><img src="https://img.shields.io/github/stars/sakiphan/claude-devops-skills?style=flat-square&logo=github" alt="stars" /></a>
+  <a href="https://github.com/sakiphan/claude-devops-skills/actions"><img src="https://img.shields.io/github/actions/workflow/status/sakiphan/claude-devops-skills/ci.yml?style=flat-square&logo=github-actions&logoColor=white&label=CI" alt="CI" /></a>
 </p>
 
 <p align="center">
   <a href="https://www.npmjs.com/package/claude-skills-devops"><strong>View on npm</strong></a> &nbsp;&middot;&nbsp;
-  <a href="https://github.com/sakiphan/claude-skills-devops"><strong>View on GitHub</strong></a>
+  <a href="https://github.com/sakiphan/claude-devops-skills"><strong>View on GitHub</strong></a>
 </p>
 
 <p align="center">
