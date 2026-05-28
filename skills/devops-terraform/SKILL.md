@@ -204,6 +204,8 @@ Generate computed local values:
 
 ## Phase 5: Common Infrastructure Patterns
 
+> Reference: `references/aws-patterns.md` (AWS) and `references/gcp-patterns.md` (GCP) for complete, copy-ready module examples per resource type.
+
 ### VPC with Public/Private Subnets (AWS)
 
 Generate:
@@ -250,6 +252,8 @@ Generate:
 - Logging to separate bucket (optional)
 
 ## Phase 6: Best Practices Enforcement
+
+> Reference: `references/terraform-best-practices.md` for the full checklist on state, modularity, tagging, security, and code quality.
 
 ### Remote State
 - ALWAYS configure remote state with locking

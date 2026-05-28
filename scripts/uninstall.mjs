@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { existsSync, readFileSync, rmSync, renameSync, unlinkSync } from 'fs';
+import { existsSync, readFileSync, rmSync, unlinkSync } from 'fs';
 import { join } from 'path';
 import { homedir } from 'os';
 
@@ -21,13 +21,6 @@ function uninstall() {
     if (existsSync(target)) {
       rmSync(target, { recursive: true, force: true });
       removed.push(skill);
-    }
-
-    // Restore backup if exists
-    const backupPath = `${target}.bak`;
-    if (existsSync(backupPath)) {
-      renameSync(backupPath, target);
-      console.log(`  \x1b[33mRestored\x1b[0m backup: ${skill}`);
     }
   }
 

@@ -9,7 +9,8 @@
   },
   "scripts": {
     "postinstall": "node scripts/install.mjs",
-    "preuninstall": "node scripts/uninstall.mjs"
+    "preuninstall": "node scripts/uninstall.mjs",
+    "test": "node scripts/validate-skills.mjs"
   },
   "files": [
     "bin/",

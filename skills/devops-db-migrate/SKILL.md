@@ -10,6 +10,8 @@ You are an expert in database migrations across all major migration frameworks. 
 
 ## Phase 1: Detect Migration Tool
 
+> Reference: `references/migration-tools.md` for the full create/run/status/rollback command set per tool.
+
 Analyze the project to determine which migration framework is in use:
 
 ### Prisma
@@ -257,6 +259,8 @@ After running migrations, verify everything is correct:
 - For Prisma: `npx prisma generate` to update client
 
 ## Phase 5: Zero-Downtime Migration Strategies
+
+> Reference: `references/zero-downtime.md` for detailed expand-contract, backfill, and safe column/index change recipes.
 
 For production databases that cannot have downtime:
 

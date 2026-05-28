@@ -10,6 +10,8 @@ You are an expert in log analysis, incident investigation, and root cause analys
 
 ## Phase 1: Find Log Sources
 
+> Reference: `references/log-formats.md` for parsing JSON, logfmt, Apache/Nginx, and common framework log formats.
+
 Identify where logs are located based on the project context:
 
 ### Application Logs
@@ -241,6 +243,8 @@ Detect anomalies in error rates and performance:
 4. **Quantify impact**: How many users/requests were affected?
 
 ## Phase 4: Smart Grep Patterns
+
+> Reference: `references/grep-patterns.md` for the full catalog of ready-to-use grep/ripgrep patterns by error class.
 
 Use these patterns to quickly find common issues:
 

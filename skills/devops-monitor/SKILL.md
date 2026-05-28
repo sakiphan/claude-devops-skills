@@ -65,6 +65,8 @@ Parse `$ARGUMENTS` for monitoring stack. If not specified, ask:
 
 ## Phase 3: Prometheus + Grafana (Default Path)
 
+> Reference: `references/prometheus-config.md` for full scrape configs, relabeling, service discovery, and recording rules.
+
 ### 3.1 Generate prometheus.yml
 
 Create a Prometheus configuration with appropriate scrape configs:
@@ -110,6 +112,8 @@ Include:
 - Resource limits to prevent monitoring from consuming excessive resources
 
 ### 3.3 Create Grafana Dashboard JSON
+
+> Reference: `references/grafana-dashboards.md` for dashboard JSON structure, panel/query examples, and provisioning.
 
 Generate dashboard JSON files for common metrics:
 
@@ -370,6 +374,8 @@ histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))
 ```
 
 ## Phase 4: Application Instrumentation
+
+> Reference: `references/app-instrumentation.md` for per-language client setup, custom metrics, and exporter wiring.
 
 ### Node.js (Express/Fastify/Koa)
 

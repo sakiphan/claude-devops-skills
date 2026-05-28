@@ -19,8 +19,10 @@ jobs:
       - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
           node-version: 20
-      - run: npm audit --audit-level=moderate || true
+      - run: npm audit --audit-level=moderate
       - run: npm pack --dry-run
+      - name: Validate skill content
+        run: node scripts/validate-skills.mjs
 
   test-install:
     name: Test Install (${{ matrix.node }})

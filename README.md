@@ -28,6 +28,10 @@
   <code>npm install -g claude-skills-devops</code>
 </p>
 
+<p align="center">
+  <sub>npm package: <code>claude-skills-devops</code> &nbsp;·&nbsp; GitHub repo: <a href="https://github.com/sakiphan/claude-devops-skills"><code>claude-devops-skills</code></a></sub>
+</p>
+
 ---
 
 ## Why?
